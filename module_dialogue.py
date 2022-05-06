@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ###########################################################
-# This module receives results from the speechrecognition module and prints to console
+# This module implements the main dialogue functionality for Pepper. 
 #
 # Syntax:
 #    python scriptname --pip <ip> --pport <port>
@@ -27,70 +27,8 @@ import time
 import sys
 from naoqi import ALProxy
 
-import subprocess
-from subprocess import Popen, PIPE, STDOUT
-
-pobj = subprocess.Popen(['java', '-jar', 'lib/Ab.jar', 'Main', 'bot=en'],
-                            stdin =subprocess.PIPE,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE)
-
-import subprocess as sp
-from threading import Thread
-from Queue import Queue,Empty
+import chatbot
 import time
-
-def getabit(o,q):
-    for c in iter(lambda:o.read(1),b''):
-        q.put(c)
-    o.close()
-
-def getdata(q):
-    r = b''
-    while True:
-        try:
-            c = q.get(False)
-        except Empty:
-            break
-        else:
-            r += c
-    return r
-
-
-
-q = Queue()
-t = Thread(target=getabit,args=(pobj.stdout,q))
-t.daemon = True
-t.start()
-
-while True:
-    print('Sleep for 2 seconds...')
-    time.sleep(2)#to ensure that the data will be processed completely
-    print('Data received:' + getdata(q).decode())
-    if not t.isAlive():
-        break
-    #in_dat = input('Your data to input:')
-    pobj.stdin.write(b'hello\n')
-    #when human says nothing
-    #pobj.stdin.write(b'\n')
-    pobj.stdin.flush()
-    break
-
-def processResponse(raw):
-    response = raw.replace("\n", " ") # changes new-line with space 
-    #response = response[7:-7]  # cuts beginning and end
-    temp = response.partition('Robot:')[-1].rpartition('Human:')[0] #takes response between "Robot:" and "Human:"
-    if not temp:
-        return response
-    return temp
-
-#test
-classic_response = "Robot: Hi nice to see you! \nHuman: "
-error_response = "[Error string lenght can vary] Robot: I don't have an answer for that. \nHuman: "
-print('-----RAW:-----')
-print(error_response)
-print('-----PROCESSED:-----')
-print(processResponse(error_response))
 
 class DialogueSpeechReceiverModule(naoqi.ALModule):
     """
@@ -148,26 +86,20 @@ class DialogueSpeechReceiverModule(naoqi.ALModule):
             self.misunderstandings +=1
             if self.misunderstandings ==1:
                 answer="I didn't understand, can you repeat?"
-            elif self.misunderstandings ==0:
+            elif self.misunderstandings == 2:
                 answer="Sorry I didn't get it, can you say it one more time?"
-            elif self.misunderstandings ==0:
+            elif self.misunderstandings == 3:
                 answer="Today I'm having troubles uderstanding what you are saying, I'm sorry"
             else:
-                answer=" "
+                answer="Please repeat that."
             print('ERROR, DEFAULT ANSWER:\n'+answer)
         else:
             self.misunderstandings = 0
-            #sending recognized input to conversational engine
-            pobj.stdin.write(b''+message+'\n')
-            pobj.stdin.flush()
-            #getting answer
-            time.sleep(1)#to ensure that the data will be processed completely
-            answer = getdata(q).decode()
-            answer = str(processResponse(answer))
+            answer = str(chatbot.respond(message))
             print('DATA RECEIVED AS ANSWER:\n'+answer)
         #text to speech the answer
         self.aup.say(answer)
-        
+        #time.sleep(2)
         if self.autodec:
             print("starting service speech-rec again")
             SpeechRecognition.start()
@@ -213,11 +145,6 @@ def main():
         p.exit()  # kill previous instance
     except:
         pass
-    try:
-        p = ALProxy("DialogueSpeechReceiverModule")
-        p.exit()  # kill previous instance
-    except:
-        pass
 
     #AutonomousLife = ALProxy('ALAutonomousLife')
     #AutonomousLife.setState('solitary')
@@ -257,7 +184,7 @@ def main():
         SpeechRecognition.setLookaheadDuration(0.5)
         #SpeechRecognition.setLanguage("de-de")
         #SpeechRecognition.calibrate()
-        SpeechRecognition.setAutoDetectionThreshold(5)
+        SpeechRecognition.setAutoDetectionThreshold(10)
         SpeechRecognition.enableAutoDetection()
         #SpeechRecognition.startRecording()
 
@@ -267,7 +194,7 @@ def main():
 
     except KeyboardInterrupt:
         print
-        print "Interrupted by user, shutting down"
+        print("Interrupted by user, shutting down")
         myBroker.shutdown()
         sys.exit(0)
 
