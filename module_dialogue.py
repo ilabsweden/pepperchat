@@ -27,8 +27,8 @@ import time
 import sys
 from naoqi import ALProxy
 
-import chatbot
-import time
+from chatbot import Chatbot
+chatbot = Chatbot()
 
 class DialogueSpeechReceiverModule(naoqi.ALModule):
     """

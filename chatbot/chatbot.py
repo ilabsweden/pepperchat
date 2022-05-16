@@ -1,31 +1,31 @@
 import os
+import sys
 import aiml
 
-BRAIN_FILE="brain.dump"
+if sys.version_info[0] > 2:
+    raw_input = input
 
-k = aiml.Kernel()
-d = os.path.dirname(__file__)
+class Chatbot:
 
-# To increase the startup speed of the bot it is
-# possible to save the parsed aiml files as a
-# dump. This code checks if a dump exists and
-# otherwise loads the aiml from the xml files
-# and saves the brain dump.
-if os.path.exists(os.path.join(d,BRAIN_FILE)):
-    print("Loading from brain file: " + BRAIN_FILE)
-    k.loadBrain(os.path.join(d,BRAIN_FILE))
-else:
-    print("Parsing aiml files")
-    k.bootstrap(learnFiles=os.path.join(d,"std-startup.aiml"), commands="load aiml b")
-    print("Saving brain file: " + BRAIN_FILE)
-    k.saveBrain(os.path.join(d,BRAIN_FILE))
+    def __init__(self,aimlPath="std-startup.aiml",brainPath="brain.dump"):
+        self.brain=brainPath
+        self.k = aiml.Kernel()
+
+        if os.path.exists(self.brain):
+            print("Loading from brain file: " + self.brain)
+            self.k.loadBrain(self.brain)
+        else:
+            print("Parsing aiml files")
+            self.k.bootstrap(learnFiles=aimlPath, commands="load aiml b")
+            print("Saving brain file: " + self.brain)
+            self.k.saveBrain(self.brain)
+
+    def respond(self,inputText):
+        return self.k.respond(inputText)
 
 if __name__ =='__main__':
-    # Endless loop which passes the input to the bot and prints
-    # its response
+    chatbot = Chatbot()
     while True:
         input_text = raw_input("> ")
-        response = k.respond(input_text)
+        response = chatbot.respond(input_text)
         print(response)
-else:
-    print(d)
