@@ -1,9 +1,0 @@
-url:https://www.kth.se/rpl
-name:Pepper
-email:igor.lirussi@studio.unibo.it
-gender:male
-birthday:22 July
-botmaster:Lirussi Igor
-organization:Interaction Lab, University of Skovde.
-version:4.2.0
-build: July 2020
