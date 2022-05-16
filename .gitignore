@@ -1,3 +1,9 @@
-
 *.pyc
 *.dump
+
+# Notebook
+.ipynb_checkpoints/*
+
+# Visual Studio and VS Code
+.vs/*
+.vscode/*
