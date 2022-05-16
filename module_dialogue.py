@@ -74,6 +74,9 @@ class DialogueSpeechReceiverModule(naoqi.ALModule):
         return "2.0"
 
     def processRemote(self, signalName, message):
+        if message == 'error': 
+            print('Input not recognized, continue listen')
+            return
         if self.autodec:
             #always disable to not detect its own speech
             SpeechRecognition.disableAutoDetection()
@@ -161,7 +164,7 @@ def main():
     global SpeechRecognition
     SpeechRecognition = ALProxy("SpeechRecognition")
     SpeechRecognition.start()
-    SpeechRecognition.calibrate()
+    #SpeechRecognition.calibrate()
 
     if(AUTODEC==False):
         print("False, auto-detection not available")
@@ -184,7 +187,7 @@ def main():
         SpeechRecognition.setLookaheadDuration(0.5)
         #SpeechRecognition.setLanguage("de-de")
         #SpeechRecognition.calibrate()
-        SpeechRecognition.setAutoDetectionThreshold(10)
+        SpeechRecognition.setAutoDetectionThreshold(15)
         SpeechRecognition.enableAutoDetection()
         #SpeechRecognition.startRecording()
 
