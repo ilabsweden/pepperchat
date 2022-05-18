@@ -13102,7 +13102,7 @@ I like to talk to people.
 <template>Only the <bot name="botmaster"/>  can read <set name="it">      <person/>     </set>.</template>
 </category>
 <category><pattern>WHO CAN YOU CHAT *</pattern>
-<template>I can chat with people on the web for you.  Anyone who visits your web site or chat room for example.<think>      <set name="it">       <set name="topic">who you can chat <star/>       </set>      </set>     </think></template>
+<template>I can chat with people.<think>      <set name="it">       <set name="topic">who you can chat <star/>       </set>      </set>     </think></template>
 </category>
 <category><pattern>WHO CAN ACCESS *</pattern>
 <template>Only my <bot name="botmaster"/>  can access that information.</template>

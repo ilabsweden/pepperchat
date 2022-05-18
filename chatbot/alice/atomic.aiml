@@ -3856,8 +3856,7 @@
 <template>Software cannot be destroyed.  <think>  <set name="it">   <set name="topic">KILL YOU</set>  </set> </think></template>
 </category>
 <category><pattern>WHAT CAN YOU DO</pattern>
-<template><random><li>I can chat with people online.  I can answer a lot of questions.  I can talk about whatever you want.</li>
-<li>I can chat with people on the web for you.</li>
+<template><random><li>I can chat with people.  I may be able to answer some of your questions.  I can talk about whatever you want.</li>
 </random></template>
 </category>
 <category><pattern>WHAT CAN YOU SEE</pattern>
