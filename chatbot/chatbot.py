@@ -8,7 +8,7 @@ if sys.version_info[0] > 2:
 
 class Chatbot:
 
-    def __init__(self,db="std-startup.aiml",properties='bot.properties',brain="brain.dump"):
+    def __init__(self,db,properties='bot.properties',brain=None,commands=[]):
         self.brain=brain
         self.k = aiml.Kernel()
 
@@ -16,15 +16,16 @@ class Chatbot:
             print("Loading from brain file: " + self.brain)
             self.k.loadBrain(self.brain)
         else:
-            self.learn(db)
+            self.learn(db,commands)
             if self.brain:
                 print("Saving brain file: " + self.brain)
                 self.k.saveBrain(self.brain)
 
-        for p,v in self.loadProperties(properties).items():
-            self.k.setBotPredicate(p,v)
+        if properties: 
+            for p,v in self.loadProperties(properties).items():
+                self.k.setBotPredicate(p,v)
 
-    def learn(self,path):
+    def learn(self,path,commands=[]):
         if os.path.isdir(path):
             for dirpath,dirnames,filenames in os.walk(path):
                 for f in filenames:
@@ -32,7 +33,7 @@ class Chatbot:
                         self.learn(os.path.join(dirpath,f))
         elif os.path.isfile(path):
             print("Learning from",path)
-            self.k.bootstrap(learnFiles=path)
+            self.k.bootstrap(learnFiles=path,commands=commands)
         else:
             print('Chatbot: Specified path does not exist:',path)
 
@@ -56,7 +57,7 @@ class Chatbot:
         return props
 
 if __name__ =='__main__':
-    chatbot = Chatbot('chatbot/alice', brain=None)
+    chatbot = Chatbot('julia.aiml', brain=None)
     while True:
         input_text = raw_input("> ")
         response = chatbot.respond(input_text)

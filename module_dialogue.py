@@ -28,7 +28,8 @@ import sys
 from naoqi import ALProxy
 
 from chatbot import Chatbot
-chatbot = Chatbot()
+chatbot = Chatbot('std-startup.aiml',commands='load aiml b')
+#chatbot = Chatbot('chatbot/julia.aiml')
 
 class DialogueSpeechReceiverModule(naoqi.ALModule):
     """
@@ -38,8 +39,9 @@ class DialogueSpeechReceiverModule(naoqi.ALModule):
     
     
     def __init__( self, strModuleName, strNaoIp ):
-        self.autodec = AUTODEC
+        self.autodec = AUTODEC 
         self.misunderstandings=0
+        self.log = open('dialogue.log','a')
         try:
             naoqi.ALModule.__init__(self, strModuleName )
             self.BIND_PYTHON( self.getName(),"callback" )
@@ -74,6 +76,7 @@ class DialogueSpeechReceiverModule(naoqi.ALModule):
         return "2.0"
 
     def processRemote(self, signalName, message):
+        self.log.write('INP: ' + message + '\n')
         if message == 'error': 
             print('Input not recognized, continue listen')
             return
@@ -101,6 +104,7 @@ class DialogueSpeechReceiverModule(naoqi.ALModule):
             answer = str(chatbot.respond(message))
             print('DATA RECEIVED AS ANSWER:\n'+answer)
         #text to speech the answer
+        self.log.write('ANS: ' + answer + '\n')
         self.aup.say(answer)
         #time.sleep(2)
         if self.autodec:
@@ -187,7 +191,7 @@ def main():
         SpeechRecognition.setLookaheadDuration(0.5)
         #SpeechRecognition.setLanguage("de-de")
         #SpeechRecognition.calibrate()
-        SpeechRecognition.setAutoDetectionThreshold(15)
+        SpeechRecognition.setAutoDetectionThreshold(10)
         SpeechRecognition.enableAutoDetection()
         #SpeechRecognition.startRecording()
 

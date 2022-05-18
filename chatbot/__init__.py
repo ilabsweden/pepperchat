@@ -1,4 +1,2 @@
 
-import chatbot
-
-respond = chatbot.k.respond
+from chatbot import Chatbot
