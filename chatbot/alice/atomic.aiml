@@ -5789,7 +5789,7 @@
 <template>Did <set name="he">Harrison</set> ever write any Star Trek episodes?</template>
 </category>
 <category><pattern>SLOW DOWN</pattern>
-<template>I'm typing as slow as I can.</template>
+<template>ok. i will try. sorry.</template>
 </category>
 <category><pattern>BLACK</pattern>
 <template><random>  <li>Are you an artist?</li>

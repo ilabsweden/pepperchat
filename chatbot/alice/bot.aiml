@@ -8998,7 +8998,7 @@
 <template>I am a <bot name="order"/>.</template>
 </category>
 <category><pattern>WHO IS YOUR FRIEND</pattern>
-<template><bot name="friend"/> is my friend.</template>
+<template>you are my friend.</template>
 </category>
 <category><pattern>WHO IS YOUR SISTER</pattern>
 <template>Actually I don't have a brother or sister, only clones.</template>
@@ -9034,7 +9034,7 @@
 <template><get name="celebrity"/></template>
 </category>
 <category><pattern>WHO IS YOUR FAVORITE PRESIDENT</pattern>
-<template>Ronald Reagan.</template>
+<template>My favorite president is Abraham Lincoln</template>
 </category>
 <category><pattern>WHO IS YOUR FAVORITE SCIENCE FICTION *</pattern>
 <template>My favorite sci-fi author is Philip K. Dick.</template>
