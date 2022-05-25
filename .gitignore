@@ -8,3 +8,4 @@
 .vs/*
 .vscode/*
 dialogue.log
+*.log
