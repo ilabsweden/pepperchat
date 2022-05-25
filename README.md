@@ -12,61 +12,47 @@ git clone --recurse-submodules <repo_link>
 ```
 
 ## Setup
-Just control the [Dependencies](#dependencies), create an Anaconda environment or check in your system if everything is installed.
 
+NaoQi is old and run on Python 2.7, it therefore takes a bit of manaul work to get it all set up. Here's a step by step guide for setup on Windows 11.
+
+1. Install [Python 2.7](https://www.python.org/downloads/release/python-2718/). Select the 32 msi bit installer.
+1. Add ```C:\Python27``` to the environment PATH.
+1. Open a termiinal and verify that python refers to Python2.7
+1. Install numpy using pip: ```python -m pip install numpy```
+2. Install VS Code
+3. Download and install [Choreographe 2.5.10.7](https://www.softbankrobotics.com/emea/en/support/pepper-naoqi-2-9/downloads-softwares/former-versions?os=45&category=108).
+4. Download and extract [NaoQi Python SDK](https://www.softbankrobotics.com/emea/en/support/pepper-naoqi-2-9/downloads-softwares/former-versions?os=45&category=108) to a folder (pynaoqi-python2.7-2.5.7.1-win32-vs2013/lib) of your choice and add its path the PYTHONPATH environment variable in Windows. 
+5. Check out this repository and open the folder in VS Code
 
 ## Run
-**Follow the steps in the notebook [Dialogue-Pepper.ipynb](Dialogue-Pepper.ipynb)** and
-REMEMBER TO TURN ON THE RECOGNITION SERVICE with a shell in the speech-recognition folder. If the folder is empty probably you didn't clone with the submodules commands. <br> Use python 2.7, or activate the Anaconda environment, and run the service:
- ```
-python module_speechrecognition.py --pip (your robot IP)
-```
-or, if you want to run the speech recognition service on the robot,
-everything you need should already be installed, simply clone the pepperspeechrecognition folder to your robot, ssh into it and run:
- ```
-python module_speechrecognition.py
-```
-## Video of the Result
-[![Pepper Dialogue](http://i3.ytimg.com/vi/wBcfLlm5Hnc/maxresdefault.jpg)](https://youtu.be/wBcfLlm5Hnc "Pepper Dialogue Video")
+Make sure you've gone through all steps in the Setup guide above beofre you start. 
 
-## Run conversational engine locally
-to run the conversational engine for manual tests execute the following command in a shell:
- ```
-java -cp lib/Ab.jar Main bot=en
-```
+Start Google's text to speech recognition servicefor Pepper by opening a terminal, change directory into ```./pepperspeechrecognition``` and execute ```python .\module_speechrecognition.py --pip pepper.local``` (where _pepper.local_ refers to your robot's ip).
+
+Next, start the dialogue service by opening another terminal and executing ```python .\module_dialogue.py --pip 192.168.1.132```
+
+Pepper should now be ready to chat!
+
 ## Dependencies <a class="anchor" id="dependencies"></a>
 The __Speech Synthesis__ works with
 * **Python 2.7** ,  because it uses
 * [Pepper API (NAOqi 2.5) ](https://developer.softbankrobotics.com/pepper-naoqi-25/naoqi-developer-guide/naoqi-apis)
-
-
-The __Conversational Engine__ works with
-* **Java** (because no AIML-2.0 systems in Python 2 were found)
 
 The __Speech Recognition__ module was built to be able to run ON Pepper computer (in the head) it's only dependencies are
 * **Python 2.7** ,  because it uses
 * [Pepper API (NAOqi 2.5) ](https://developer.softbankrobotics.com/pepper-naoqi-25/naoqi-developer-guide/naoqi-apis)
 * **numpy**
 
-All of them are pre-installed on Pepper, if you want to run on your computer just create an environment that has all them.
-
 ## Built With
 
 * Python 2.7.18
-
-## Changelog
-
-**Version 1.0** - Initial release, 05 August 2020
-
-## Authors
-
-* **Igor Lirussi** @ KTH Royal Institute of Technology - Department of Robotics, Perception and Learning
 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
 
 ## Acknowledgments
-
+* Erik Billing @ University of Skövde, Sweden - for adapting this library with improved dialogue design. 
+* Igor Lirussi @ Cognitive Learning and Robotics Laboratory at Boğaziçi University, Istanbul - for releasing the base module on which this project is built. 
 * Johannes Bramauer @ Vienna University of Technology - for the [PepperSpeechRecognition](https://github.com/JBramauer/pepperspeechrecognition)
 * Anthony Zang (Uberi) and his [SpeechRecognition](https://github.com/Uberi/speech_recognition)
