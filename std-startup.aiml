@@ -69,6 +69,7 @@
             <learn>chatbot/alice/update1.aiml</learn>
             <learn>chatbot/alice/update_mccormick.aiml</learn>
             <learn>chatbot/julia.aiml</learn>
+            <learn>chatbot/erik.aiml</learn>
         </template>
     </category>
 </aiml>
