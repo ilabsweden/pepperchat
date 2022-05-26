@@ -13,16 +13,31 @@ git clone --recurse-submodules <repo_link>
 
 ## Setup
 
-NaoQi is old and run on Python 2.7, it therefore takes a bit of manaul work to get it all set up. Here's a step by step guide for setup on Windows 11.
+NaoQi is old and runs on Python 2.7 while OpenAI requires Python 3. We therefore need both Python versions installed. Here's a step by step guide for setup on Windows 11.
 
+1. Make sure Python 3.x is installed on the system. 
 1. Install [Python 2.7](https://www.python.org/downloads/release/python-2718/). Select the 32 msi bit installer.
 1. Add ```C:\Python27``` to the environment PATH.
-1. Open a termiinal and verify that python refers to Python2.7
-1. Install numpy using pip: ```python -m pip install numpy```
-2. Install VS Code
-3. Download and install [Choreographe 2.5.10.7](https://www.softbankrobotics.com/emea/en/support/pepper-naoqi-2-9/downloads-softwares/former-versions?os=45&category=108).
-4. Download and extract [NaoQi Python SDK](https://www.softbankrobotics.com/emea/en/support/pepper-naoqi-2-9/downloads-softwares/former-versions?os=45&category=108) to a folder (pynaoqi-python2.7-2.5.7.1-win32-vs2013/lib) of your choice and add its path the PYTHONPATH environment variable in Windows. 
-5. Check out this repository and open the folder in VS Code
+1. Open a terminal and verify that ```python``` refers to Python2.7 and ```python3``` refers to your Python 3.x distribution. 
+
+Now we need a few of dependencies:
+
+1. Install numpy for Python2: ```python -m pip install numpy```
+1. Install zmq for both Python 2 and 3: ```python -m pip install zmq``` and ```python3 -m pip install zmq```
+1. Install OpenAI for Python3: ```python3 -m pip install openai```
+
+We will use VS Code to run things, you may also use another environment if you prefer. 
+
+1. Install VS Code
+
+Now we need Choreographe and NaoQi for the Pepper robot. 
+
+1. Download and install [Choreographe 2.5.10.7](https://www.softbankrobotics.com/emea/en/support/pepper-naoqi-2-9/downloads-softwares/former-versions?os=45&category=108).
+1. Download and extract [NaoQi Python SDK](https://www.softbankrobotics.com/emea/en/support/pepper-naoqi-2-9/downloads-softwares/former-versions?os=45&category=108) to a folder (pynaoqi-python2.7-2.5.7.1-win32-vs2013/lib) of your choice and add its path the PYTHONPATH environment variable in Windows. 
+
+Finally, we are ready to check out the repository. 
+
+1. Check out this repository and open the folder in VS Code
 
 ## Run
 Make sure you've gone through all steps in the Setup guide above beofre you start. 

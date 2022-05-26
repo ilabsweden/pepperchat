@@ -27,9 +27,11 @@ import time
 import sys
 from naoqi import ALProxy
 
-from chatbot import Chatbot
-chatbot = Chatbot('std-startup.aiml',commands='load aiml b')
-#chatbot = Chatbot('chatbot/julia.aiml')
+#from chatbot import Chatbot
+#chatbot = Chatbot('std-startup.aiml',commands='load aiml b')
+
+from oaichat import OaiClient
+chatbot = OaiClient(('Your name is Pepper.','We are currently at the Interaction Lab in Skövde, Sweden.','You are a robot.'))
 
 class DialogueSpeechReceiverModule(naoqi.ALModule):
     """
