@@ -3,7 +3,7 @@
 import zmq
 import json
 from threading import Thread
-from openaichat import OaiChat
+from oaichat.openaichat import OaiChat
 
 port = "5556"
 
@@ -23,8 +23,8 @@ class OaiServer(OaiChat):
 
     def _run(self): 
         print('Starting OpenAI chat server...')
-        response = {}
         while self.thread:
+            response = {}
             i = json.loads(self.listen())
             print('Input received:',i)
             if 'reset' in i and i['reset']:
@@ -51,7 +51,7 @@ class OaiServer(OaiChat):
     def send(self,s):
         return self.socket.send_string(s)
 
-if __name__ == '__main__':
+def main():
     server = OaiServer()
     server.start()
     try: 

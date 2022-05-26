@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os, sys
-from oairesponse import OaiResponse
+from oaichat.oairesponse import OaiResponse
 
 if sys.version_info[0] < 3:
     raise ImportError('OpenAI Chat requires Python 3')
