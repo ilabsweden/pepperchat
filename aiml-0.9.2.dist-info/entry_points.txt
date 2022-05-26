@@ -1,4 +1,0 @@
-[console_scripts]
-aiml-bot = aiml.script.bot:main
-aiml-validate = aiml.script.aimlvalidate:main
-
