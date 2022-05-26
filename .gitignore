@@ -1,0 +1,5 @@
+*.log
+*.pyc
+.ipynb_checkpoints/*
+.vs/*
+.vscode/*
