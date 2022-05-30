@@ -16,22 +16,23 @@ class OaiChat:
       self.history = list(history)
 
   def respond(self, inputText):
-    self.history.append(inputText)
+    self.history.append('\nPerson: ' + inputText)
+    print('\n'.join(self.history) + '\n')
     response = openai.Completion.create(
       engine="text-davinci-002",
-      prompt='\n'.join(self.history) + '\n',
+      prompt='\n'.join(self.history) + '\nRobot: ',
       temperature=0.7,
       max_tokens=256,
       top_p=1,
-      frequency_penalty=0,
+      frequency_penalty=1,
       presence_penalty=0
     )
     r = OaiResponse(response)
-    self.history.append(r.getText())
+    self.history.append('Robot: ' + r.getText())
     return r
 
 if __name__ == '__main__':
-  chat = OaiChat(('Your name is Pepper.','We are currently at the Interaction Lab in Skövde, Sweden.','You are a robot.'))
+  chat = OaiChat()
 
   while True:
     s = input('> ')

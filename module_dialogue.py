@@ -33,7 +33,7 @@ from naoqi import ALProxy
 participantId = raw_input('Participant ID: ')
 
 from oaichat.oaiclient import OaiClient
-chatbot = OaiClient(('Your name is Pepper.','We are currently at the Interaction Lab in Skovde, Sweden.','You are a robot.'),log=participantId)
+chatbot = OaiClient(('You are talking to the robot Pepper. We are currently at the Interaction Lab in a town called Schvthe. We are in the country Sweden.',),log=participantId)
 
 class DialogueSpeechReceiverModule(naoqi.ALModule):
     """
