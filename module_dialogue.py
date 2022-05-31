@@ -25,6 +25,7 @@ from optparse import OptionParser
 import naoqi
 import time
 import sys
+import codecs
 from naoqi import ALProxy
 
 #from chatbot import Chatbot
@@ -33,7 +34,7 @@ from naoqi import ALProxy
 participantId = raw_input('Participant ID: ')
 
 from oaichat.oaiclient import OaiClient
-chatbot = OaiClient(('You are talking to the robot Pepper. We are currently at the Interaction Lab in a town called Schvthe. We are in the country Sweden.',),log=participantId)
+chatbot = OaiClient((u'You are talking to the robot Pepper. We are currently at the Interaction Lab in a town called Skövde. We are in the country Sweden.',),log=participantId)
 
 class DialogueSpeechReceiverModule(naoqi.ALModule):
     """
@@ -45,7 +46,7 @@ class DialogueSpeechReceiverModule(naoqi.ALModule):
     def __init__( self, strModuleName, strNaoIp ):
         self.autodec = AUTODEC 
         self.misunderstandings=0
-        self.log = open('dialogue.log','a')
+        self.log = codecs.open('dialogue.log','a',encoding='utf-8')
         try:
             naoqi.ALModule.__init__(self, strModuleName )
             self.BIND_PYTHON( self.getName(),"callback" )
@@ -79,6 +80,11 @@ class DialogueSpeechReceiverModule(naoqi.ALModule):
     def version( self ):
         return "2.0"
 
+    def encode(self,s):
+        s = s.replace(u'å','a').replace(u'ä','a').replace(u'ö','o')
+        s = s.replace(u'Skovde','Schoe the')
+        return codecs.encode(s,'ascii','ignore')
+
     def processRemote(self, signalName, message):
         self.log.write('INP: ' + message + '\n')
         if message == 'error': 
@@ -105,7 +111,7 @@ class DialogueSpeechReceiverModule(naoqi.ALModule):
             print('ERROR, DEFAULT ANSWER:\n'+answer)
         else:
             self.misunderstandings = 0
-            answer = str(chatbot.respond(message))
+            answer = self.encode(chatbot.respond(message))
             print('DATA RECEIVED AS ANSWER:\n'+answer)
         #text to speech the answer
         self.log.write('ANS: ' + answer + '\n')
