@@ -101,6 +101,10 @@ class SpeechRecognitionModule(naoqi.ALModule):
             # counter for wav file output
             self.fileCounter = 0
 
+            print("Turning off builtin dialog engine")
+            self.al = naoqi.ALProxy("ALAutonomousLife")
+            self.al.switchFocus('julia-8b4016/behavior_1')
+
         except BaseException, err:
             print( "ERR: SpeechRecognitionModule: loading error: %s" % str(err) )
 
