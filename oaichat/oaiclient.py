@@ -4,6 +4,7 @@
 import zmq
 import sys
 import json
+import os, codecs
 from datetime import datetime
 from oairesponse import OaiResponse
 
@@ -28,8 +29,11 @@ class OaiClient:
         print("Connecting to server...")
         self.socket = self.context.socket(zmq.REQ)
         self.socket.connect("tcp://localhost:%s" % self.port)
-        if history:
-            print('Updating hiostory...',self.send({'history':history,'reset':True}))
+        
+        if not history:
+            with codecs.open(os.path.join(os.path.dirname(__file__),'openai.prompt'),encoding='utf-8') as f:
+                history = f.readlines()
+        print('Updating hiostory...',self.send({'history':history,'reset':True}))
 
     def respond(self,s):
         return OaiResponse(self.send({'input':s})).getText()

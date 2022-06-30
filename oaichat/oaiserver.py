@@ -28,10 +28,14 @@ class OaiServer(OaiChat):
             i = json.loads(self.listen())
             print('Input received:',i)
             if 'reset' in i and i['reset']:
+                print('Resetting history.')
                 self.history = []
                 response['reset']='ok'
             if 'history' in i:
-                self.history.extend(i['history'])
+                print('Extending history:')
+                for row in i['history']: 
+                    print('\t'+row.strip())
+                    self.history.append(row.strip())
                 response['history']='ok'
             if 'input' in i:
                 r = self.respond(i['input'])
