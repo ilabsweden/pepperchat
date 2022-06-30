@@ -13,7 +13,7 @@
 """Zmq server interface for the OpenAI chatbot"""
 
 import zmq
-import json
+import json, datetime
 from threading import Thread
 from oaichat.openaichat import OaiChat
 
@@ -53,6 +53,7 @@ class OaiServer(OaiChat):
                 r = self.respond(i['input'])
                 for k,v in r.json.items():
                     response[k] = v        
+            response['time'] = datetime.datetime.now().isoformat()
             print('Sending response:',response)        
             self.send(json.dumps(response))
                 
