@@ -1,3 +1,15 @@
+# -*- coding: utf-8 -*-
+
+###########################################################
+# This is the server interface for the GPT-3 OpenAI chatbot.  
+#
+# Syntax:
+#    python3 oaiserver.py
+#
+# Author: Erik Billing, University of Skovde
+# Created: June 2022. 
+# License: Copyright reserved to the author. 
+###########################################################
 """Zmq server interface for the OpenAI chatbot"""
 
 import zmq

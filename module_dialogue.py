@@ -8,8 +8,8 @@
 #
 #    --pip <ip>: specify the ip of your robot (without specification it will use the NAO_IP defined below
 #
-# Author: Johannes Bramauer, Vienna University of Technology
-# Created: May 30, 2018
+# Author: Johannes Bramauer, Vienna University of Technology and Erik Billing, University of Skovde
+# Created: May 30, 2018 and updated spring 2022. 
 # License: MIT
 ###########################################################
 
@@ -34,7 +34,7 @@ from naoqi import ALProxy
 participantId = raw_input('Participant ID: ')
 
 from oaichat.oaiclient import OaiClient
-chatbot = OaiClient(log=participantId)
+chatbot = OaiClient( log=participantId)
 
 class DialogueSpeechReceiverModule(naoqi.ALModule):
     """

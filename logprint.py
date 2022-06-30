@@ -1,3 +1,15 @@
+# -*- coding: utf-8 -*-
+
+###########################################################
+# This module implements the main dialogue functionality for Pepper. 
+#
+# Syntax:
+#    python logprint.py <path to log file>
+#
+# Author: Erik Billing, University of Skovde
+# Created: June 2022. 
+# License: MIT
+###########################################################
 
 import json
 import sys

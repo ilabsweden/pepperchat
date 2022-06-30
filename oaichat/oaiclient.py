@@ -1,5 +1,16 @@
 # -*- coding: utf-8 -*-
-"""Zmq server interface for the OpenAI chatbot"""
+
+###########################################################
+# This is the client interfacve for the GPT-3 OpenAI chatbot.  
+#
+# Syntax:
+#    python oaiclient.py (runs under both python2 and python3)
+#
+# Author: Erik Billing, University of Skovde
+# Created: June 2022. 
+# License: Copyright reserved to the author. 
+###########################################################
+"""Zmq cloent interface for the OpenAI chatbot"""
 
 import zmq
 import sys

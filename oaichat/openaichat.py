@@ -1,5 +1,16 @@
 # -*- coding: utf-8 -*-
 
+###########################################################
+# The GPT-3 OpenAI chatbot class definition. Executes a local
+# text based chatbot interface using the GPT-3 chatbot. 
+#
+# Syntax:
+#    python3 openaichat.py
+#
+# Author: Erik Billing, University of Skovde
+# Created: June 2022. 
+# License: Copyright reserved to the author. 
+###########################################################
 import os, sys
 from oaichat.oairesponse import OaiResponse
 

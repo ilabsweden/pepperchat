@@ -8,10 +8,10 @@
 #
 #    --pip <ip>: specify the ip of your robot (without specification it will use the NAO_IP defined below)
 #
-# Author: Johannes Bramauer, Vienna University of Technology
-# Created: May 30, 2018
+# Author: Johannes Bramauer, Vienna University of Technology and Erik Billing, University of Skovde
+# Created: May 30, 2018 and updated spring 2022. 
 # License: MIT
-#
+###########################################################
 ###########################################################
 
 NAO_IP = "127.0.0.1" # default, for running on Pepper
