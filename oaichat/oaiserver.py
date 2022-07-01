@@ -12,21 +12,18 @@
 ###########################################################
 """Zmq server interface for the OpenAI chatbot"""
 
-import zmq
+import zmq, os
 import datetime
 from threading import Thread
 from oaichat.openaichat import OaiChat
 
-port = "5556"
-
 class OaiServer(OaiChat):
 
-    def __init__(self, prompt=None, port=5556):
+    def __init__(self, prompt=None):
         super().__init__(prompt)
-        self.port = port
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.REP)
-        self.socket.bind("tcp://*:%d"%self.port)
+        self.socket.bind('tcp://*:'+os.getenv('CHATBOT_SERVER_ADDRESS').split(':')[-1])
         self.thread = None
 
     def start(self):

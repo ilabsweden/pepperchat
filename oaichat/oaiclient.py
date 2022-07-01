@@ -23,13 +23,10 @@ dotenv.load_dotenv()
 if sys.version_info[0] > 2:
     raw_input = input
 
-port = "5556"
-
 class OaiClient:
 
-    def __init__(self, name='OaiClient', log=None, port=5556):
+    def __init__(self, name='OaiClient', log=None):
         self.name = name
-        self.port = port
         self.context = zmq.Context()
 
         self.log = None
@@ -42,7 +39,7 @@ class OaiClient:
             
         sys.stdout.write("Connecting to OpenAI chatbot server... ")
         self.socket = self.context.socket(zmq.REQ)
-        self.socket.connect("tcp://localhost:%s" % self.port)
+        self.socket.connect(os.getenv('CHATBOT_SERVER_ADDRESS'))
         handshake = self.send({'handshake':self.name})
         print("Done." if handshake.get('handshake') == 'ok' else "Unexpected response '%s'"%handshake)
 
@@ -59,9 +56,7 @@ class OaiClient:
         if self.log: 
             json.dump({'receiving':r},self.log)
             self.log.write(',\n')
-        return r
-
-    
+        return r 
 
 if __name__ == '__main__':
     client = OaiClient(('Your name is Pepper.','We are currently at the Interaction Lab in Skovde, Sweden.','You are a robot.'))

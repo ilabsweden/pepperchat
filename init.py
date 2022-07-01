@@ -6,7 +6,8 @@ import os, sys
 
 DEFAULTS = {
     'LOGDIR': 'logs',
-    'OPENAI_PROMPTFILE': 'openai.prompt'
+    'OPENAI_PROMPTFILE': 'openai.prompt',
+    'CHATBOT_SERVER_ADDRESS': 'tcp://localhost:5556'
 }
 
 if sys.version_info[0] > 2:
