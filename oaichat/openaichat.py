@@ -14,13 +14,15 @@
 import os, sys
 from oaichat.oairesponse import OaiResponse
 
+import dotenv
+dotenv.load_dotenv()
+
 if sys.version_info[0] < 3:
     raise ImportError('OpenAI Chat requires Python 3')
 
 import openai
 
-with open(os.path.join(os.path.dirname(__file__),'openai.key')) as f: 
-  openai.api_key = f.read()
+openai.api_key = os.getenv('OPENAI_KEY')
 
 class OaiChat:
   def __init__(self,history=()):

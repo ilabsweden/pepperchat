@@ -11,7 +11,24 @@
 # License: Copyright reserved to the author. 
 ###########################################################
 
-from oaichat.oaiserver import main
+from oaichat.oaiserver import OaiServer
 
 if __name__ == '__main__':
-    main()
+    server = OaiServer()
+    server.start()
+    try: 
+        print('Type an input message to test your chatbot. Type "history" to print dialogue history or "exit" to quit the server.')
+        while True:
+            s = input('> ')
+            if s == 'exit':
+                break
+            elif s == 'history':
+                for line in server.history: print('\t'+line)
+            elif s:
+                print(server.respond(s).getText())
+    except KeyboardInterrupt:
+        pass
+    finally:
+        server.stop()
+
+    
