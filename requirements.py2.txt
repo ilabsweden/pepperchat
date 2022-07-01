@@ -1,0 +1,4 @@
+# PepperChat Python2 Requirements
+numpy
+python-dotenv
+zmq
