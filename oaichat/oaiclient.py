@@ -15,7 +15,6 @@
 import zmq
 import sys
 import json
-import os, codecs
 from datetime import datetime
 from oairesponse import OaiResponse
 
@@ -26,8 +25,8 @@ port = "5556"
 
 class OaiClient:
 
-    def __init__(self, history=(), port=5556, log=None):
-        
+    def __init__(self, name='OaiClient', log=None, port=5556):
+        self.name = name
         self.port = port
         self.context = zmq.Context()
 
@@ -37,14 +36,11 @@ class OaiClient:
                 log = 'dialogue.%s.%s.log'%(log,datetime.now().strftime("%Y-%m-%d_%H%M%S"))
             self.log = open(log,'a')
             
-        print("Connecting to server...")
+        sys.stdout.write("Connecting to OpenAI chatbot server... ")
         self.socket = self.context.socket(zmq.REQ)
         self.socket.connect("tcp://localhost:%s" % self.port)
-        
-        if not history:
-            with codecs.open(os.path.join(os.path.dirname(__file__),'openai.prompt'),encoding='utf-8') as f:
-                history = f.readlines()
-        print('Updating hiostory...',self.send({'history':history,'reset':True}))
+        handshake = self.send({'handshake':self.name})
+        print("Done." if handshake.get('handshake') == 'ok' else "Unexpected response '%s'"%handshake)
 
     def respond(self,s):
         return OaiResponse(self.send({'input':s})).getText()
@@ -53,12 +49,14 @@ class OaiClient:
         if self.log: 
             json.dump({'sending':o},self.log)
             self.log.write(',\n')
-        self.socket.send_string(json.dumps(o))
-        r = json.loads(self.socket.recv())
+        self.socket.send_json(o)
+        r = self.socket.recv_json()
         if self.log: 
             json.dump({'receiving':r},self.log)
             self.log.write(',\n')
         return r
+
+    
 
 if __name__ == '__main__':
     client = OaiClient(('Your name is Pepper.','We are currently at the Interaction Lab in Skovde, Sweden.','You are a robot.'))

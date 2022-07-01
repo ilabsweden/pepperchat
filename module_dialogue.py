@@ -34,7 +34,7 @@ from naoqi import ALProxy
 participantId = raw_input('Participant ID: ')
 
 from oaichat.oaiclient import OaiClient
-chatbot = OaiClient( log=participantId)
+chatbot = OaiClient(log=participantId)
 
 class DialogueSpeechReceiverModule(naoqi.ALModule):
     """

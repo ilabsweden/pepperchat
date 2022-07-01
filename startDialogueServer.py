@@ -23,7 +23,10 @@ if __name__ == '__main__':
             if s == 'exit':
                 break
             elif s == 'history':
-                for line in server.history: print('\t'+line)
+                for line in server.history: print(line)
+            elif s == 'reset':
+                server.reset()
+                print('Dialogue history reset.')
             elif s:
                 print(server.respond(s).getText())
     except KeyboardInterrupt:

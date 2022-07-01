@@ -13,7 +13,7 @@
 """Zmq server interface for the OpenAI chatbot"""
 
 import zmq
-import json, datetime
+import datetime
 from threading import Thread
 from oaichat.openaichat import OaiChat
 
@@ -21,8 +21,8 @@ port = "5556"
 
 class OaiServer(OaiChat):
 
-    def __init__(self, history=(), port=5556):
-        super().__init__(history)
+    def __init__(self, prompt=None, port=5556):
+        super().__init__(prompt)
         self.port = port
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.REP)
@@ -37,11 +37,14 @@ class OaiServer(OaiChat):
         print('Starting OpenAI chat server...')
         while self.thread:
             response = {}
-            i = json.loads(self.listen())
+            i = self.listen()
             print('Input received:',i)
+            if 'handshake' in i: 
+                print('New client connected:',i['handshake'])
+                response['handshake'] = 'ok'
             if 'reset' in i and i['reset']:
                 print('Resetting history.')
-                self.history = []
+                self.reset()
                 response['reset']='ok'
             if 'history' in i:
                 print('Extending history:')
@@ -55,7 +58,7 @@ class OaiServer(OaiChat):
                     response[k] = v        
             response['time'] = datetime.datetime.now().isoformat()
             print('Sending response:',response)        
-            self.send(json.dumps(response))
+            self.send(response)
                 
     def stop(self):
         self.socket.close()
@@ -63,10 +66,10 @@ class OaiServer(OaiChat):
 
     def listen(self):
         #  Wait for next request from client
-        return self.socket.recv()
+        return self.socket.recv_json()
 
     def send(self,s):
-        return self.socket.send_string(s)
+        return self.socket.send_json(s)
 
 def main():
     server = OaiServer()

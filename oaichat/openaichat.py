@@ -11,7 +11,7 @@
 # Created: June 2022. 
 # License: Copyright reserved to the author. 
 ###########################################################
-import os, sys
+import os, sys, codecs
 from oaichat.oairesponse import OaiResponse
 
 import dotenv
@@ -25,12 +25,17 @@ import openai
 openai.api_key = os.getenv('OPENAI_KEY')
 
 class OaiChat:
-  def __init__(self,history=()):
-      self.history = list(history)
+  def __init__(self,prompt=None):
+    self.reset(prompt)
+
+  def reset(self,prompt=None):
+      if prompt is None or isinstance(prompt,str):
+        self.history = self.loadPrompt(prompt or os.getenv('OPENAI_PROMPTFILE'))
+      else:
+        self.history = list(prompt)
 
   def respond(self, inputText):
     self.history.append('\nPerson: ' + inputText)
-    print('\n'.join(self.history) + '\n')
     response = openai.Completion.create(
       engine="text-davinci-002",
       prompt='\n'.join(self.history) + '\nRobot: ',
@@ -43,6 +48,15 @@ class OaiChat:
     r = OaiResponse(response)
     self.history.append('Robot: ' + r.getText())
     return r
+
+  def loadPrompt(self,promptFile):
+    promptFile = promptFile or 'openai.prompt'
+    promptPath = promptFile if os.path.isfile(promptFile) else os.path.join(os.path.dirname(__file__),promptFile)
+    if not os.path.isfile(promptPath):
+      print('WARNING: Unable to locate OpenAI prompt file',promptFile)
+      return []
+    with codecs.open(promptPath,encoding='utf-8') as f:
+      return f.readlines()
 
 if __name__ == '__main__':
   chat = OaiChat()
