@@ -46,6 +46,7 @@ class OaiClient:
         return OaiResponse(self.send({'input':s})).getText()
 
     def send(self,o):
+        o['time'] = datetime.now().isoformat()
         if self.log: 
             json.dump({'sending':o},self.log)
             self.log.write(',\n')
