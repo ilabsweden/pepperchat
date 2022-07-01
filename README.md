@@ -4,6 +4,9 @@ The code aims to give Pepper basic conversation abilities, this includes a speec
 
 This is a fork of Igor Lirussi's [Pepper Dialogue System](https://github.com/igor-lirussi/Dialogue-Pepper-Robot).
 
+## Video of the Result
+[![Pepper Dialogue](img/Pepper-prompt.png)](https://youtu.be/zip90jyv1i4)
+
 ## Installation
 With git bash you have to clone, possibly with SSH, the repository with the following command. <br>
 **Pay attention to clone also the submodules with the --recurse-submodules or some parts of the project will miss**
