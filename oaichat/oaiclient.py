@@ -13,10 +13,12 @@
 """Zmq cloent interface for the OpenAI chatbot"""
 
 import zmq
-import sys
-import json
+import sys, os, json
 from datetime import datetime
 from oairesponse import OaiResponse
+
+import dotenv
+dotenv.load_dotenv()
 
 if sys.version_info[0] > 2:
     raw_input = input
@@ -32,9 +34,11 @@ class OaiClient:
 
         self.log = None
         if log:
+            logdir = os.getenv('LOGDIR')
+            if not os.path.isdir(logdir): os.mkdir(logdir)
             if not log.endswith('.log'): 
                 log = 'dialogue.%s.%s.log'%(log,datetime.now().strftime("%Y-%m-%d_%H%M%S"))
-            self.log = open(log,'a')
+            self.log = open(os.path.join(logdir,log),'a')
             
         sys.stdout.write("Connecting to OpenAI chatbot server... ")
         self.socket = self.context.socket(zmq.REQ)

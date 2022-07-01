@@ -35,6 +35,7 @@ Now we need the Python NaoQi API for communicating with the Pepper robot.
 Finally, we are ready to check out the repository. 
 
 * Check out this repository and open the folder in VS Code
+* Now run ```python init.py``` to set up a default environment. Have your OpenAI account key available so that this can be stored with your configuration. 
 
 ## Run
 Make sure you've gone through all steps in the Setup guide above beofre you start. 
