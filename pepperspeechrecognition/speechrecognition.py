@@ -27,6 +27,8 @@ from naoqi import ALProxy
 from google import Recognizer, UnknownValueError, RequestError
 from numpy import sqrt, mean, square
 import traceback
+reload(sys)
+sys.setdefaultencoding("utf-8")
 
 
 RECORDING_DURATION = 10     # seconds, maximum recording time, also default value for startRecording(), Google Speech API only accepts up to about 10-15 seconds
@@ -38,7 +40,7 @@ SAMPLE_RATE = 48000         # Hz, be careful changing this, both google and Naoq
 CALIBRATION_DURATION = 4    # seconds, timespan during which calibration is performed (summing up RMS values and calculating mean)
 CALIBRATION_THRESHOLD_FACTOR = 1.5  # factor the calculated mean RMS gets multiplied by to determine the auto detection threshold (after calibration)
 
-DEFAULT_LANGUAGE = "en-us"  # RFC5646 language tag, e.g. "en-us", "de-de", "fr-fr",... <http://stackoverflow.com/a/14302134>
+DEFAULT_LANGUAGE = "sv-se"  # RFC5646 language tag, e.g. "en-us", "de-de", "fr-fr",... <http://stackoverflow.com/a/14302134>
 
 WRITE_WAV_FILE = False      # write the recorded audio to "out.wav" before sending it to google. intended for debugging purposes
 PRINT_RMS = False           # prints the calculated RMS value to the console, useful for setting the threshold
@@ -103,7 +105,7 @@ class SpeechRecognitionModule(naoqi.ALModule):
 
             print("Turning off builtin dialog engine")
             self.al = naoqi.ALProxy("ALAutonomousLife")
-            self.al.switchFocus('julia-8b4016/behavior_1')
+            #self.al.switchFocus('julia-8b4016/behavior_1')
 
         except BaseException, err:
             print( "ERR: SpeechRecognitionModule: loading error: %s" % str(err) )
@@ -147,7 +149,6 @@ class SpeechRecognitionModule(naoqi.ALModule):
 
     def processRemote( self, nbOfChannels, nbrOfSamplesByChannel, aTimeStamp, buffer ):
         #print("INF: SpeechRecognitionModule: Processing '%s' channels" % nbOfChannels)
-
         # calculate a decimal seconds timestamp
         timestamp = float (str(aTimeStamp[0]) + "."  + str(aTimeStamp[1]))
 
@@ -159,7 +160,7 @@ class SpeechRecognitionModule(naoqi.ALModule):
 
             # compute RMS, handle autodetection and calibration
             if( self.isCalibrating or self.isAutoDetectionEnabled or self.isRecording):
-
+                
                 # compute the rms level on front mic
                 rmsMicFront = self.calcRMSLevel(self.convertStr2SignedInt(aSoundData[0]))
 

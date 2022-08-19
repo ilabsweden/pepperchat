@@ -1,3 +1,4 @@
+# coding=utf-8
 # -*- coding: utf-8 -*-
 
 ###########################################################
@@ -21,6 +22,8 @@ import sys, time
 import naoqi
 from optparse import OptionParser
 from pepperspeechrecognition import SpeechRecognitionModule
+reload(sys)
+sys.setdefaultencoding("utf-8")
 
 def main():
     """ Main entry point

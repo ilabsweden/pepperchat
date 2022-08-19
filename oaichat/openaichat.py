@@ -43,7 +43,7 @@ class OaiChat:
       max_tokens=256,
       top_p=1,
       frequency_penalty=1,
-      presence_penalty=0
+      presence_penalty=0.5
     )
     r = OaiResponse(response)
     self.history.append('Robot: ' + r.getText())

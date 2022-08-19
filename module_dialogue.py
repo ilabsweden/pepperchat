@@ -1,3 +1,4 @@
+# coding=utf-8
 # -*- coding: utf-8 -*-
 
 ###########################################################
@@ -27,6 +28,9 @@ import time
 import sys
 import codecs
 from naoqi import ALProxy
+reload(sys)
+sys.setdefaultencoding("utf-8")
+
 
 #from chatbot import Chatbot
 #chatbot = Chatbot('std-startup.aiml',commands='load aiml b')
@@ -81,9 +85,7 @@ class DialogueSpeechReceiverModule(naoqi.ALModule):
         return "2.0"
 
     def encode(self,s):
-        s = s.replace(u'å','a').replace(u'ä','a').replace(u'ö','o')
-        s = s.replace(u'Skovde','Schoe the')
-        return codecs.encode(s,'ascii','ignore')
+        return s.encode()
 
     def processRemote(self, signalName, message):
         self.log.write('INP: ' + message + '\n')

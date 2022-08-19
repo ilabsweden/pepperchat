@@ -26,6 +26,8 @@ import naoqi
 import time
 import sys
 from naoqi import ALProxy
+reload(sys)
+sys.setdefaultencoding("utf-8")
 
 
 class BaseSpeechReceiverModule(naoqi.ALModule):
@@ -131,8 +133,8 @@ def main():
         SpeechRecognition.setIdleReleaseTime(1.0)
         SpeechRecognition.setMaxRecordingDuration(10)
         SpeechRecognition.setLookaheadDuration(0.5)
-        #SpeechRecognition.setLanguage("de-de")
-        #SpeechRecognition.calibrate()
+        #SpeechRecognition.setLanguage("se")
+        SpeechRecognition.calibrate()
         SpeechRecognition.setAutoDetectionThreshold(5)
         SpeechRecognition.enableAutoDetection()
         #SpeechRecognition.startRecording()
