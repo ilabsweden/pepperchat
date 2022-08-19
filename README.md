@@ -38,8 +38,12 @@ Finally, we are ready to check out the repository.
 * Check out this repository and open the folder in VS Code
 * Now run ```python init.py``` to set up a default environment. Have your OpenAI account key available so that this can be stored with your configuration. 
 
+## Important note
+For safety reasons, this software doesn't work on LiU's network. Connect both Pepper and the computer running the scripts to a mobile hotspot or similar for it to function properly.
+
+
 ## Run
-Make sure you've gone through all steps in the Setup guide above beofre you start. 
+Make sure you've gone through all steps in the Setup guide above before you start. 
 
 * Start the OpenAI GPT-3 chatbot service by opening a terminal and execute ```python3 startDialogueServer.py```. If everything goes well, the server should respond with _Starting OpenAI chat server...
 Type an input message to test your chatbot..._
