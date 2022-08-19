@@ -41,6 +41,8 @@ Finally, we are ready to check out the repository.
 ## Important note
 For safety reasons, this software doesn't work on LiU's network. Connect both Pepper and the computer running the scripts to a mobile hotspot or similar for it to function properly.
 
+## Configuration
+You can change the prompt in openai/openai.prompt. If you want to change the language back to English, you can change the DEFAULT_LANGUAGE in pepperspeechrecognition/speechrecognition.py to en-us, as well as the language argument in pepperspeechrecognition/google.py in the recognize_google function.
 
 ## Run
 Make sure you've gone through all steps in the Setup guide above before you start. 
