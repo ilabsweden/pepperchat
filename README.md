@@ -1,8 +1,9 @@
 # PepperChat
 
-The code aims to give Pepper basic conversation abilities, this includes a speech recognition module, a conversational engine to formulate the answers and the speech synthesis.
+The code interfaces [OpenAI GPT-3](https://openai.com/) with the [SoftBank Pepper](https://www.softbankrobotics.com/emea/en) robot, allowing open verbal conversation with Pepper on a wide range of subjects.
 
-This is a fork of Igor Lirussi's [Pepper Dialogue System](https://github.com/igor-lirussi/Dialogue-Pepper-Robot).
+## Video of the Result
+[![Pepper Dialogue](img/Pepper-prompt.png)](https://youtu.be/zip90jyv1i4)
 
 ## Installation
 With git bash you have to clone, possibly with SSH, the repository with the following command. <br>
@@ -50,7 +51,7 @@ Type an input message to test your chatbot..._
 Please refer to [LICENSE.md](LICENSE.md) for license details.
 
 ## Acknowledgments
-* Erik Billing @ University of Skövde, Sweden - for adapting this library with OpenAI GPT-3 dialogue system. 
-* Igor Lirussi @ Cognitive Learning and Robotics Laboratory at Boğaziçi University, Istanbul - for releasing the base module on which this project is built. 
+* Erik Billing @ University of Skövde, Sweden - for implementing the OpenAI GPT-3 dialogue system. 
+* Igor Lirussi @ Cognitive Learning and Robotics Laboratory at Boğaziçi University, Istanbul - for providing an [AIML-based dialogue system](https://github.com/igor-lirussi/Dialogue-Pepper-Robot) on which this project is built. 
 * Johannes Bramauer @ Vienna University of Technology - for the [PepperSpeechRecognition](https://github.com/JBramauer/pepperspeechrecognition)
 * Anthony Zang (Uberi) and his [SpeechRecognition](https://github.com/Uberi/speech_recognition)
