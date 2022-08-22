@@ -12,7 +12,7 @@ With git bash you have to clone, possibly with SSH, the repository with the foll
 git clone --recurse-submodules <repo_link>
 ```
 
-## Setup
+## Setup for Windows
 
 NaoQi is old and runs on Python 2.7 while OpenAI requires Python 3. We therefore need both Python versions installed. Here's a step by step guide for setup on Windows 11.
 
@@ -36,7 +36,36 @@ Now we need the Python NaoQi API for communicating with the Pepper robot.
 Finally, we are ready to check out the repository. 
 
 * Check out this repository and open the folder in VS Code
-* Now run ```python init.py``` to set up a default environment. Have your OpenAI account key available so that this can be stored with your configuration. 
+* Open a terminal and run ```python init.py``` to set up a default environment. Have your OpenAI account key available so that this can be stored with your configuration. 
+
+## Setup for OSX
+
+NaoQi is old and runs on Python 2.7 while OpenAI requires Python 3. 
+
+1. Open a terminal and verify that ```python2``` refers to Python2.7 and ```python3``` refers to your Python 3.x distribution. If any of them are missing, please install through your preferred package manager.  
+
+Now we need a few of dependencies:
+
+* Install all dependencies for Python 2: ```python2 -m pip install -r .\requirements.py2.txt```
+* Install all dependencies for Python 3: ```python3 -m pip install -r .\requirements.py3.txt```
+
+We are now ready to check out the repository:
+
+* Check out this repository and open the folder in VS Code
+* Open a terminal and run ```python init.py``` to set up a default environment. Have your OpenAI account key available so that this can be stored with your configuration. 
+
+We will use [VS Code](https://code.visualstudio.com/) to run things, you may also use another environment if you prefer. 
+
+Now we need the Python NaoQi API for communicating with the Pepper robot. 
+
+* Download and extract NaoQi Python SDK for [Nao](https://www.softbankrobotics.com/emea/en/support/nao-6/downloads-softwares) or [Pepper](https://www.softbankrobotics.com/emea/en/support/pepper-naoqi-2-9/downloads-softwares/former-versions?os=45&category=108) matching the version of your robot's software. Tested with Pynaoqi 2.8.6.
+* Update your *.zshrc* with the following:
+    * export PYTHONPATH=${PYTHONPATH}:/path/to/python-sdk/lib/python2.7/site-packages
+    * export DYLD_LIBRARY_PATH=${DYLD_LIBRARY_PATH}:/path/to/python-sdk/lib
+    * export QI_SDK_PREFIX=/path/to/python-sdk
+* Start ```python2``` and make sure you can import ```naoqi```. OSX will throw a lot of warnings the first time. Google for the exact way to approve these. 
+
+I haven't been able to make Choreographe to run on recent versions of OSX, but it's not needed for running this app. 
 
 ## Run
 Make sure you've gone through all steps in the Setup guide above beofre you start. 
