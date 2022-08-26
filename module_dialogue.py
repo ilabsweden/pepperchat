@@ -6,18 +6,15 @@
 # Syntax:
 #    python scriptname --pip <ip> --pport <port>
 #
-#    --pip <ip>: specify the ip of your robot (without specification it will use the NAO_IP defined below
+#    --pip <ip>: specify the ip of your robot (without specification it will use the ROBOT_IP defined below
 #
 # Author: Johannes Bramauer, Vienna University of Technology and Erik Billing, University of Skovde
 # Created: May 30, 2018 and updated spring 2022. 
 # License: MIT
 ###########################################################
 
-# NAO_PORT = 65445 # Virtual Machine
-NAO_PORT = 9559 # Robot
-
-# NAO_IP = "127.0.0.1" # Virtual Machine
-NAO_IP = "pepper.local" # Pepper default
+ROBOT_PORT = 9559 # Robot
+ROBOT_IP = "pepper.local" # Pepper default
 
 AUTODEC = True
 
@@ -27,9 +24,6 @@ import time
 import sys
 import codecs
 from naoqi import ALProxy
-
-#from chatbot import Chatbot
-#chatbot = Chatbot('std-startup.aiml',commands='load aiml b')
 
 participantId = raw_input('Participant ID: ')
 
@@ -61,16 +55,16 @@ class DialogueSpeechReceiverModule(naoqi.ALModule):
         self.stop()
 
     def start( self ):
-        self.memory = naoqi.ALProxy("ALMemory", self.strNaoIp, NAO_PORT)
+        self.memory = naoqi.ALProxy("ALMemory", self.strNaoIp, ROBOT_PORT)
         self.memory.subscribeToEvent("SpeechRecognition", self.getName(), "processRemote")
         print( "INF: ReceiverModule: started!" )
         try:
             #self.session.connect("tcp://" + self.strNaoIp + ":" + str(NAO_PORT))
             #self.aup = self.session.service("ALAnimatedSpeech")
-            self.aup = ALProxy("ALAnimatedSpeech",  self.strNaoIp, NAO_PORT)
+            self.aup = ALProxy("ALAnimatedSpeech",  self.strNaoIp, ROBOT_PORT)
             #self.tts = self.session.service("ALTextToSpeech")
         except RuntimeError:
-            print ("Can't connect to Naoqi at ip \"" + self.strNaoIp + "\" on port " + str(NAO_PORT) +".\n"
+            print ("Can't connect to Naoqi at ip \"" + self.strNaoIp + "\" on port " + str(ROBOT_PORT) +".\n"
                "Please check your script arguments. Run with -h option for help.")
 
     def stop( self ):
@@ -140,8 +134,8 @@ def main():
         dest="pport",
         type="int")
     parser.set_defaults(
-        pip=NAO_IP,
-        pport=NAO_PORT)
+        pip=ROBOT_IP,
+        pport=ROBOT_PORT)
 
     (opts, args_) = parser.parse_args()
     pip   = opts.pip

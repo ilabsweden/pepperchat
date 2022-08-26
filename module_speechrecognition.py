@@ -6,7 +6,7 @@
 # Syntax:
 #    python scriptname --pip <ip> --pport <port>
 #
-#    --pip <ip>: specify the ip of your robot (without specification it will use the NAO_IP defined below)
+#    --pip <ip>: specify the ip of your robot (without specification it will use the ROBOT_IP defined below)
 #
 # Author: Johannes Bramauer, Vienna University of Technology and Erik Billing, University of Skovde
 # Created: May 30, 2018 and updated spring 2022. 
@@ -14,8 +14,8 @@
 ###########################################################
 ###########################################################
 
-NAO_IP = "pepper.local" # default, for running on Pepper
-NAO_PORT = 9559
+ROBOT_IP = "pepper.local" # default, for running on Pepper
+ROBOT_PORT = 9559
 
 import sys, time
 import naoqi
@@ -35,8 +35,8 @@ def main():
         dest="pport",
         type="int")
     parser.set_defaults(
-        pip=NAO_IP,
-        pport=NAO_PORT)
+        pip=ROBOT_IP,
+        pport=ROBOT_PORT)
 
     (opts, args_) = parser.parse_args()
     pip   = opts.pip
