@@ -17,7 +17,7 @@
 NAO_PORT = 9559 # Robot
 
 # NAO_IP = "127.0.0.1" # Virtual Machine
-NAO_IP = "nao.local" # Pepper default
+NAO_IP = "pepper.local" # Pepper default
 
 AUTODEC = True
 
@@ -35,6 +35,7 @@ participantId = raw_input('Participant ID: ')
 
 from oaichat.oaiclient import OaiClient
 chatbot = OaiClient(log=participantId)
+chatbot.reset()
 
 class DialogueSpeechReceiverModule(naoqi.ALModule):
     """

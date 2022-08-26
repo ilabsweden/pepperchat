@@ -58,6 +58,13 @@ class OaiClient:
             self.log.write(',\n')
         return r 
 
+    def reset(self):
+        r = self.send({'reset':True})
+        if r.get('reset') == 'ok':
+            print('Dialogue history reset')
+        else:
+            print('Error resetting dialoge history')
+
 if __name__ == '__main__':
     client = OaiClient(('Your name is Pepper.','We are currently at the Interaction Lab in Skovde, Sweden.','You are a robot.'))
     while True:

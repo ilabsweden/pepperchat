@@ -14,7 +14,7 @@
 ###########################################################
 ###########################################################
 
-NAO_IP = "127.0.0.1" # default, for running on Pepper
+NAO_IP = "pepper.local" # default, for running on Pepper
 NAO_PORT = 9559
 
 import sys, time
