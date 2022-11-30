@@ -8,8 +8,8 @@
 #
 #    --pip <ip>: specify the ip of your robot (without specification it will use the NAO_IP defined below)
 #
-# Author: Johannes Bramauer, Vienna University of Technology
-# Created: May 30, 2018
+# Author: Johannes Bramauer, Vienna University of Technology. Updated by Erik Billing, University of Skovde, for integration with the OpenAI chatbot.
+# Created: May 30, 2018. Updated: November 2022. 
 # License: MIT
 #
 ###########################################################
@@ -292,6 +292,7 @@ class SpeechRecognitionModule(naoqi.ALModule):
 
         # buffer is a list of nparrays we now concat into one array
         # and the slice out the first mic channel
+        
         slice = np.concatenate(self.buffer, axis=1)[0]
 
         # initialize preBuffer with last samples to fix cut off words

@@ -22,6 +22,7 @@ NAO_IP = "nao.local" # Pepper default
 AUTODEC = True
 
 from optparse import OptionParser
+import re
 import naoqi
 import time
 import sys
@@ -64,10 +65,8 @@ class DialogueSpeechReceiverModule(naoqi.ALModule):
         self.memory.subscribeToEvent("SpeechRecognition", self.getName(), "processRemote")
         print( "INF: ReceiverModule: started!" )
         try:
-            #self.session.connect("tcp://" + self.strNaoIp + ":" + str(NAO_PORT))
-            #self.aup = self.session.service("ALAnimatedSpeech")
+            self.posture = ALProxy("ALRobotPosture", self.strNaoIp, NAO_PORT)
             self.aup = ALProxy("ALAnimatedSpeech",  self.strNaoIp, NAO_PORT)
-            #self.tts = self.session.service("ALTextToSpeech")
         except RuntimeError:
             print ("Can't connect to Naoqi at ip \"" + self.strNaoIp + "\" on port " + str(NAO_PORT) +".\n"
                "Please check your script arguments. Run with -h option for help.")
@@ -116,6 +115,7 @@ class DialogueSpeechReceiverModule(naoqi.ALModule):
         #text to speech the answer
         self.log.write('ANS: ' + answer + '\n')
         self.aup.say(answer)
+        self.react(answer)
         #time.sleep(2)
         if self.autodec:
             print("starting service speech-rec again")
@@ -125,6 +125,15 @@ class DialogueSpeechReceiverModule(naoqi.ALModule):
         else:
             #asking the Speech Recognition to LISTEN AGAIN
             SpeechRecognition.startRecording()
+
+    def react(self,s):
+        if re.match(".*I.*sit down.*",s): # Sitting down
+            self.posture.goToPosture("Sit",1.0)
+        elif re.match(".*I.*stand up.*",s): # Standing up
+            self.posture.goToPosture("Stand",1.0)
+        elif re.match(".*I.*(lie|lyi).*down.*",s): # Lying down
+            self.posture.goToPosture("LyingBack",1.0)
+        
 
 def main():
     """ Main entry point

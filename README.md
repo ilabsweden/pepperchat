@@ -1,18 +1,15 @@
-# PepperChat
+# Pepper Chat
 
-The code interfaces [OpenAI GPT-3](https://openai.com/) with the [SoftBank Pepper](https://www.softbankrobotics.com/emea/en) robot, allowing open verbal conversation with Pepper on a wide range of subjects.
+The code interfaces [OpenAI GPT-3](https://openai.com/) with the [Aldebaran](https://www.aldebaran.com/en) Pepper and Nao robots, allowing open verbal conversation with these robots on a wide range of subjects.
 
 ## Video of the Result
 [![Pepper Dialogue](img/Pepper-prompt.png)](https://youtu.be/zip90jyv1i4)
 
 ## Installation
-With git bash you have to clone, possibly with SSH, the repository with the following command. <br>
-**Pay attention to clone also the submodules with the --recurse-submodules or some parts of the project will miss**
-```
-git clone --recurse-submodules <repo_link>
-```
 
-## Setup for Windows
+[PepperChat](https://github.com/ilabsweden/pepperchat) depends on the NaoQi software to interface with the Pepper and Nao robots, and the OpenAI API to interface with GPT-3. Please refer to the detailed setup instructions below for your preferred operating system. 
+
+### Setup for Windows
 
 NaoQi is old and runs on Python 2.7 while OpenAI requires Python 3. We therefore need both Python versions installed. Here's a step by step guide for setup on Windows 11.
 
@@ -38,7 +35,7 @@ Finally, we are ready to check out the repository.
 * Check out this repository and open the folder in VS Code
 * Open a terminal and run ```python init.py``` to set up a default environment. Have your OpenAI account key available so that this can be stored with your configuration. 
 
-## Setup for OSX
+### Setup for OSX and Linux
 
 NaoQi is old and runs on Python 2.7 while OpenAI requires Python 3. 
 
@@ -59,16 +56,18 @@ We will use [VS Code](https://code.visualstudio.com/) to run things, you may als
 Now we need the Python NaoQi API for communicating with the Pepper robot. 
 
 * Download and extract NaoQi Python SDK for [Nao](https://www.softbankrobotics.com/emea/en/support/nao-6/downloads-softwares) or [Pepper](https://www.softbankrobotics.com/emea/en/support/pepper-naoqi-2-9/downloads-softwares/former-versions?os=45&category=108) matching the version of your robot's software. Tested with Pynaoqi 2.8.6.
-* Update your *.zshrc* with the following:
+* Update your terminal profile (e.g. *.zshrc*) with the following:
     * export PYTHONPATH=${PYTHONPATH}:/path/to/python-sdk/lib/python2.7/site-packages
     * export DYLD_LIBRARY_PATH=${DYLD_LIBRARY_PATH}:/path/to/python-sdk/lib
     * export QI_SDK_PREFIX=/path/to/python-sdk
-* Start ```python2``` and make sure you can import ```naoqi```. OSX will throw a lot of warnings the first time. Google for the exact way to approve these. 
+* Start ```python2``` and make sure you can import ```naoqi```. OSX may throw a lot of warnings the first time NaoQi is imported. Google for the exact way to approve these. 
 
 I haven't been able to make Choreographe to run on recent versions of OSX, but it's not needed for running this app. 
 
 ## Run
-Make sure you've gone through all steps in the Setup guide above beofre you start. 
+Make sure you've gone through all steps in the Setup guide above before you start. 
+
+Note that the Speech recognition module uses a NaoQi (*Autonomous Life Proxy*) to switch focus to *nao_focus*. You may not have this script on your own robot and the the code will throw an exception as a result. This call is made solely to prevent the default dialogue system of the robot to interfere with PepperChat. You may safely comment this away or upload your own preferred focus script to the robot, e.g. using Choreograph. 
 
 * Start the OpenAI GPT-3 chatbot service by opening a terminal and execute ```python3 startDialogueServer.py```. If everything goes well, the server should respond with _Starting OpenAI chat server...
 Type an input message to test your chatbot..._
@@ -77,7 +76,9 @@ Type an input message to test your chatbot..._
 
 ## License
 
-Please refer to [LICENSE.md](LICENSE.md) for license details.
+This project is released under the MIT license. Please refer to [LICENSE.md](LICENSE.md) for license details.
+
+Parts of the source code have specific license formulations. Please see the file headers for details. 
 
 ## Acknowledgments
 * Erik Billing @ University of Skövde, Sweden - for implementing the OpenAI GPT-3 dialogue system. 
