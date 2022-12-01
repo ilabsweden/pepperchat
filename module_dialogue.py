@@ -60,8 +60,8 @@ class DialogueSpeechReceiverModule(naoqi.ALModule):
         self.memory.subscribeToEvent("SpeechRecognition", self.getName(), "processRemote")
         print( "INF: ReceiverModule: started!" )
         try:
-            self.posture = ALProxy("ALRobotPosture", self.strNaoIp, NAO_PORT)
-            self.aup = ALProxy("ALAnimatedSpeech",  self.strNaoIp, NAO_PORT)
+            self.posture = ALProxy("ALRobotPosture", self.strNaoIp, ROBOT_PORT)
+            self.aup = ALProxy("ALAnimatedSpeech",  self.strNaoIp, ROBOT_PORT)
         except RuntimeError:
             print ("Can't connect to Naoqi at ip \"" + self.strNaoIp + "\" on port " + str(ROBOT_PORT) +".\n"
                "Please check your script arguments. Run with -h option for help.")
