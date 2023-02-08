@@ -13,6 +13,7 @@
 ###########################################################
 import os, sys, codecs, json
 from datetime import datetime
+from threading import Thread
 from oaichat.oairesponse import OaiResponse
 
 import dotenv
@@ -47,6 +48,10 @@ class OaiChat:
     print('Logging requests to',log)
 
   def respond(self, inputText):
+    start = datetime.now()
+    self.moderation = None
+    #moderator = Thread(target=self.getModeration,args=(inputText,))
+    #moderator.start()
     self.history.append('\nPerson: ' + inputText)
     response = self.getCompletion(
       engine="text-davinci-003",
@@ -58,15 +63,18 @@ class OaiChat:
       frequency_penalty=1,
       presence_penalty=0
     )
+    #moderator.join()
+    #print('Moderation:',self.moderation)
     r = OaiResponse(response)
+
     self.history.append('Robot: ' + r.getText())
+    print('Request delay',datetime.now()-start)
     return r
 
   def getCompletion(self,**kwargs):
-      #self.log.write(json.dumps(kwargs))
-      json.dump(kwargs,self.log)
-      self.log.write(',\n')
-      return openai.Completion.create(**kwargs)
+    json.dump(kwargs,self.log)
+    self.log.write(',\n')
+    return openai.Completion.create(**kwargs)
 
   def loadPrompt(self,promptFile):
     promptFile = promptFile or 'openai.prompt'
