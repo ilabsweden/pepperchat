@@ -14,7 +14,7 @@
 from oaichat.oaiserver import OaiServer
 
 if __name__ == '__main__':
-    server = OaiServer()
+    server = OaiServer(user='User 1')
     server.start()
     try: 
         print('Type an input message to test your chatbot. Type "history" to print dialogue history or "exit" to quit the server.')
@@ -33,5 +33,6 @@ if __name__ == '__main__':
         pass
     finally:
         server.stop()
+    print('GPT Server closed.')
 
     

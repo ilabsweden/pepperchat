@@ -25,16 +25,16 @@ if sys.version_info[0] > 2:
 
 class OaiClient:
 
-    def __init__(self, name='OaiClient', log=None):
+    def __init__(self, name='OaiClient', user=None):
         self.name = name
+        self.user = user
         self.context = zmq.Context()
 
         self.log = None
-        if log:
+        if user:
             logdir = os.getenv('LOGDIR')
             if not os.path.isdir(logdir): os.mkdir(logdir)
-            if not log.endswith('.log'): 
-                log = 'dialogue.%s.%s.log'%(log,datetime.now().strftime("%Y-%m-%d_%H%M%S"))
+            log = 'dialogue.%s.%s.log'%(user,datetime.now().strftime("%Y-%m-%d_%H%M%S"))
             self.log = open(os.path.join(logdir,log),'a')
             
         sys.stdout.write("Connecting to OpenAI chatbot server... ")
@@ -59,7 +59,7 @@ class OaiClient:
         return r 
 
     def reset(self):
-        r = self.send({'reset':True})
+        r = self.send({'reset':True,'user':self.user})
         if r.get('reset') == 'ok':
             print('Dialogue history reset')
         else:

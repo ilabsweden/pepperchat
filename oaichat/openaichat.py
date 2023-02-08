@@ -11,7 +11,8 @@
 # Created: June 2022. 
 # License: Copyright reserved to the author. 
 ###########################################################
-import os, sys, codecs
+import os, sys, codecs, json
+from datetime import datetime
 from oaichat.oairesponse import OaiResponse
 
 import dotenv
@@ -25,19 +26,31 @@ import openai
 openai.api_key = os.getenv('OPENAI_KEY')
 
 class OaiChat:
-  def __init__(self,prompt=None):
-    self.reset(prompt)
+  def __init__(self,user,prompt=None):
+    self.log = None
+    self.reset(user,prompt)
 
-  def reset(self,prompt=None):
-      if prompt is None or isinstance(prompt,str):
-        self.history = self.loadPrompt(prompt or os.getenv('OPENAI_PROMPTFILE'))
-      else:
-        self.history = list(prompt)
+  def reset(self,user,prompt=None):
+    self.user = user
+    if prompt is None or isinstance(prompt,str):
+      self.history = self.loadPrompt(prompt or os.getenv('OPENAI_PROMPTFILE'))
+    else:
+      self.history = list(prompt)
+    self.resetRequestLog()
+
+  def resetRequestLog(self):
+    if (self.log): self.log.close()
+    logdir = os.getenv('LOGDIR')
+    if not os.path.isdir(logdir): os.mkdir(logdir)
+    log = 'requests.%s.%s.log'%(self.user,datetime.now().strftime("%Y-%m-%d_%H%M%S"))
+    self.log = open(os.path.join(logdir,log),'a')
+    print('Logging requests to',log)
 
   def respond(self, inputText):
     self.history.append('\nPerson: ' + inputText)
-    response = openai.Completion.create(
-      engine="text-davinci-002",
+    response = self.getCompletion(
+      engine="text-davinci-003",
+      user=self.user,
       prompt='\n'.join(self.history) + '\nRobot: ',
       temperature=0.7,
       max_tokens=256,
@@ -48,6 +61,12 @@ class OaiChat:
     r = OaiResponse(response)
     self.history.append('Robot: ' + r.getText())
     return r
+
+  def getCompletion(self,**kwargs):
+      #self.log.write(json.dumps(kwargs))
+      json.dump(kwargs,self.log)
+      self.log.write(',\n')
+      return openai.Completion.create(**kwargs)
 
   def loadPrompt(self,promptFile):
     promptFile = promptFile or 'openai.prompt'
@@ -62,9 +81,13 @@ if __name__ == '__main__':
   chat = OaiChat()
 
   while True:
-    s = input('> ')
+    try:
+      s = input('> ')
+    except KeyboardInterrupt:
+      break
     if s:
       print(chat.history)
       print(chat.respond(s).getText())
     else:
         break
+  print('Closing GPT Server')
