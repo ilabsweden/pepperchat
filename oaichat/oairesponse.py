@@ -8,7 +8,10 @@
 # License: Copyright reserved to the author. 
 ###########################################################
 import json
-import openai
+try:
+  import openai
+except ImportError:
+  openai = False
 
 ENABLE_MODERATION = False
 
@@ -16,7 +19,7 @@ class OaiResponse:
 
   def __init__(self, response):
     self.json = json.loads(response) if isinstance(response,str) else response
-    if ENABLE_MODERATION: self.moderation = openai.Moderation.create(input=self.getText())
+    if openai and ENABLE_MODERATION: self.moderation = openai.Moderation.create(input=self.getText())
    
   def flagged(self):
     return hasattr(self,'moderation') and self.moderation['results'][0]['flagged']
