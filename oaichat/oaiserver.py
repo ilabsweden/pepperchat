@@ -19,8 +19,8 @@ from oaichat.openaichat import OaiChat
 
 class OaiServer(OaiChat):
 
-    def __init__(self, prompt=None):
-        super().__init__(prompt)
+    def __init__(self, user, prompt=None):
+        super().__init__(user, prompt)
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.REP)
         self.socket.bind('tcp://*:'+os.getenv('CHATBOT_SERVER_ADDRESS').split(':')[-1])
@@ -41,7 +41,7 @@ class OaiServer(OaiChat):
                 response['handshake'] = 'ok'
             if 'reset' in i and i['reset']:
                 print('Resetting history.')
-                self.reset()
+                self.reset(i['user'])
                 response['reset']='ok'
             if 'history' in i:
                 print('Extending history:')
@@ -60,6 +60,7 @@ class OaiServer(OaiChat):
     def stop(self):
         self.socket.close()
         self.thread = None
+        self.log.close()
 
     def listen(self):
         #  Wait for next request from client

@@ -103,7 +103,8 @@ class SpeechRecognitionModule(naoqi.ALModule):
 
             print("Turning off builtin dialog engine")
             self.al = naoqi.ALProxy("ALAutonomousLife")
-            self.al.switchFocus('nao_focus-e45990/behavior_1')
+            self.al.switchFocus('julia-8b4016/behavior_1')
+            #self.al.switchFocus('nao_focus-e45990/behavior_1')
 
         except BaseException, err:
             print( "ERR: SpeechRecognitionModule: loading error: %s" % str(err) )
