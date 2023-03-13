@@ -4,7 +4,7 @@
 # This is the main startup script for the GPT-3 OpenAI chatbot server.  
 #
 # Syntax:
-#    python3 startDialogueServer.py
+#    python3 startDialogueServer.py [--prompt yourPromptFile.prompt]
 #
 # Author: Erik Billing, University of Skovde
 # Created: June 2022. 

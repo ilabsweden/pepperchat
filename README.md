@@ -80,7 +80,12 @@ This project is released under the MIT license. Please refer to [LICENSE.md](LIC
 
 Parts of the source code have specific license formulations. Please see the file headers for details. 
 
+## Publications
+
+Erik Billing, Julia Rosén, and Maurice Lamb. 2023. [Language Models for Human-Robot Interaction](doc/Billing_etal_2023-Language_models_for_HRI.pdf). In Companion of the 2023 ACM/IEEE International Conference on Human-Robot Interaction (HRI ’23 Companion), March 13–16, 2023, Stockholm, Sweden. ACM, New York, NY, USA, 2 pages. https://doi.org/10.1145/3568294.3580040.
+
 ## Acknowledgments
+
 * Erik Billing @ University of Skövde, Sweden - for implementing the OpenAI GPT-3 dialogue system. 
 * Igor Lirussi @ Cognitive Learning and Robotics Laboratory at Boğaziçi University, Istanbul - for providing an [AIML-based dialogue system](https://github.com/igor-lirussi/Dialogue-Pepper-Robot) on which this project is built. 
 * Johannes Bramauer @ Vienna University of Technology - for the [PepperSpeechRecognition](https://github.com/JBramauer/pepperspeechrecognition)
