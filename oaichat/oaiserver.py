@@ -60,7 +60,7 @@ class OaiServer(OaiChat):
     def stop(self):
         self.socket.close()
         self.thread = None
-        self.log.close()
+        #self.log.close()
 
     def listen(self):
         #  Wait for next request from client

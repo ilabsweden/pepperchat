@@ -28,7 +28,7 @@ class OaiResponse:
     if self.flagged():
       return "This conversation is going nowhere."
     else:
-      return self.json['choices'][0]['text'].strip()
+      return self.json['choices'][0]['message']['content'].strip()
   
   def flaggedResponse(self):
     #categories = self.json['results'][0]['categories']
