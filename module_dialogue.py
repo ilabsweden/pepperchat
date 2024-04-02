@@ -61,8 +61,10 @@ class DialogueSpeechReceiverModule(naoqi.ALModule):
         print( "INF: ReceiverModule: started!" )
         try:
             self.posture = ALProxy("ALRobotPosture", self.strNaoIp, ROBOT_PORT)
-            self.aup = ALProxy("ALAnimatedSpeech",  self.strNaoIp, ROBOT_PORT)
-            #self.aup = ALProxy("ALSpeech",  self.strNaoIp, ROBOT_PORT)
+            if int(participantId) % 2 == 0:
+                self.aup = ALProxy("ALTextToSpeech",  self.strNaoIp, ROBOT_PORT)
+            else:
+                self.aup = ALProxy("ALAnimatedSpeech",  self.strNaoIp, ROBOT_PORT)
         except RuntimeError:
             print ("Can't connect to Naoqi at ip \"" + self.strNaoIp + "\" on port " + str(ROBOT_PORT) +".\n"
                "Please check your script arguments. Run with -h option for help.")
@@ -180,7 +182,7 @@ def main():
     if int(participantId) % 2 == 0:
         if AutonomousLife.getState() != 'disabled':
             AutonomousLife.setState('disabled')
-            RobotPosture.goToPosture('Stand',0.5)
+        RobotPosture.goToPosture('Stand',0.5)
         print('Even participant number, autonomous life disabled.')
     else:
         AutonomousLife.setState('solitary')

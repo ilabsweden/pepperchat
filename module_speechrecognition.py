@@ -73,6 +73,8 @@ def main():
     #SpeechRecognition.enableAutoDetection()
     #SpeechRecognition.startRecording()
 
+    print('Speech recognition running.')
+
     try:
         while True:
             time.sleep(1)
