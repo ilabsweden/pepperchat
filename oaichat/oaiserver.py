@@ -32,35 +32,40 @@ class OaiServer(OaiChat):
 
     def _run(self): 
         print('Starting OpenAI chat server...')
-        while self.thread:
-            response = {}
-            i = self.listen()
-            print('Input received:',i)
-            if 'handshake' in i: 
-                print('New client connected:',i['handshake'])
-                response['handshake'] = 'ok'
-            if 'reset' in i and i['reset']:
-                print('Resetting history.')
-                self.reset(i['user'])
-                response['reset']='ok'
-            if 'history' in i:
-                print('Extending history:')
-                for row in i['history']: 
-                    print('\t'+row.strip())
-                    self.history.append(row.strip())
-                response['history']='ok'
-            if 'input' in i:
-                r = self.respond(i['input'])
-                for k,v in r.json.items():
-                    response[k] = v        
-            response['time'] = datetime.datetime.now().isoformat()
-            print('Sending response:',response)        
-            self.send(response)
+        try:
+            while self.thread:
+                response = {}
+                print('Listening for msg...')
+                i = self.listen()
+                print('Input received:',i)
+                if 'handshake' in i: 
+                    print('New client connected:',i['handshake'])
+                    response['handshake'] = 'ok'
+                if 'reset' in i and i['reset']:
+                    print('Resetting history.')
+                    self.reset(i['user'])
+                    response['reset']='ok'
+                if 'history' in i:
+                    print('Extending history:')
+                    for row in i['history']: 
+                        print('\t'+row.strip())
+                        self.history.append(row.strip())
+                    response['history']='ok'
+                if 'input' in i:
+                    r = self.respond(i['input'])
+                    for k,v in r.json.items():
+                        response[k] = v        
+                response['time'] = datetime.datetime.now().isoformat()
+                print('Sending response:',response)        
+                self.send(response)
+        except zmq.error.ContextTerminated as e:
+            pass
                 
     def stop(self):
-        self.socket.close()
+        #self.socket.close()
         self.thread = None
         #self.log.close()
+        self.context.destroy()
 
     def listen(self):
         #  Wait for next request from client

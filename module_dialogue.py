@@ -62,6 +62,7 @@ class DialogueSpeechReceiverModule(naoqi.ALModule):
         try:
             self.posture = ALProxy("ALRobotPosture", self.strNaoIp, ROBOT_PORT)
             self.aup = ALProxy("ALAnimatedSpeech",  self.strNaoIp, ROBOT_PORT)
+            #self.aup = ALProxy("ALSpeech",  self.strNaoIp, ROBOT_PORT)
         except RuntimeError:
             print ("Can't connect to Naoqi at ip \"" + self.strNaoIp + "\" on port " + str(ROBOT_PORT) +".\n"
                "Please check your script arguments. Run with -h option for help.")
@@ -134,6 +135,10 @@ def main():
     """ Main entry point
 
     """
+
+    
+
+
     parser = OptionParser()
     parser.add_option("--pip",
         help="Parent broker port. The IP address or your robot",
@@ -167,8 +172,16 @@ def main():
     except:
         pass
 
-    #AutonomousLife = ALProxy('ALAutonomousLife')
+    audio = ALProxy("ALAudioDevice")
+    audio.setOutputVolume(70)
+
+    AutonomousLife = ALProxy('ALAutonomousLife')
+    AutonomousLife.setState('solitary')
+    #AutonomousLife.setState('disabled')
+    
+    RobotPosture = ALProxy('ALRobotPosture')
     #AutonomousLife.setState('solitary')
+    #RobotPosture.goToPosture('Stand',0.5)
 
     # Reinstantiate module
 

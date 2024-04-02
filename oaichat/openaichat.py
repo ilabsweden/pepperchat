@@ -58,14 +58,14 @@ class OaiChat:
       #user=self.user,
       messages=self.history,
       # temperature=0.7,
-      # max_tokens=256,
+      max_tokens=150,
       # top_p=1,
       # frequency_penalty=1,
       # presence_penalty=0
     )
     #moderator.join()
     #print('Moderation:',self.moderation)
-    print(response.choices[0].message.content)
+    #print(response.choices[0].message.content)
     r = OaiResponse(response.model_dump_json())
 
     self.history.append({'role':'assistant','content':r.getText()})
