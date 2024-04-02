@@ -189,6 +189,8 @@ def main():
         AutonomousLife.switchFocus('julia-8b4016/behavior_1')
         print('Odd participant number, autonomous life enabled.')
 
+    TabletService = ALProxy('ALTabletService')
+    TabletService.goToSleep()
     
     # Reinstantiate module
 
