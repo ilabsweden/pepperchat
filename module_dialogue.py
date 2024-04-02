@@ -176,13 +176,18 @@ def main():
     audio.setOutputVolume(70)
 
     AutonomousLife = ALProxy('ALAutonomousLife')
-    AutonomousLife.setState('solitary')
-    #AutonomousLife.setState('disabled')
-    
     RobotPosture = ALProxy('ALRobotPosture')
-    #AutonomousLife.setState('solitary')
-    #RobotPosture.goToPosture('Stand',0.5)
+    if int(participantId) % 2 == 0:
+        if AutonomousLife.getState() != 'disabled':
+            AutonomousLife.setState('disabled')
+            RobotPosture.goToPosture('Stand',0.5)
+        print('Even participant number, autonomous life disabled.')
+    else:
+        AutonomousLife.setState('solitary')
+        AutonomousLife.switchFocus('julia-8b4016/behavior_1')
+        print('Odd participant number, autonomous life enabled.')
 
+    
     # Reinstantiate module
 
     # Warning: ReceiverModule must be a global variable
