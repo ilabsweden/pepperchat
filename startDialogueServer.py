@@ -27,6 +27,7 @@ if __name__ == '__main__':
     server.start()
     try: 
         print('Type an input message to test your chatbot. Type "history" to print dialogue history or "exit" to quit the server.')
+        print(server.respond('I would like you to act as an interviewer interviewing for a [position], and I will be the candidate applying for the role. You will ask me to interview questions, and I will respond to them. Please ask one question at a time, and I exclusively want you to reply as the interviewer. I want you to just do the interview with me. Do not write explanations, and do not write what the candidate might say. Do not write all the conversation at once. Your first question should be “how are you today?').getText())      
         while True:
             s = input('> ')
             if s == 'exit':
@@ -34,8 +35,12 @@ if __name__ == '__main__':
             elif s == 'history':
                 for line in server.history: print(line)
             elif s == 'reset':
-                server.reset()
+                server.reset(server.user)
                 print('Dialogue history reset.')
+            elif s == 'start interview':
+                server.reset(server.user)
+                server.history.append('How would you start the conversation?')
+                print(server.respond(s).getText())
             elif s:
                 print(server.respond(s).getText())
     except KeyboardInterrupt:
