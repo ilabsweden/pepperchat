@@ -25,14 +25,14 @@ else:
             t = datetime.strptime(i['receiving']['time'] if 'receiving' in i else i['sending']['time'],'%Y-%m-%dT%H:%M:%S.%f')
             if lastt:
                 d = t-lastt
-                print('Replied in %.1f seconds.'%d.total_seconds())
+                print('\tReplied in %.1f seconds.'%d.total_seconds())
             else:
                 print('Conversation started ' + str(t))
             lastt = t
 
 
             if 'receiving' in i and 'choices' in i['receiving']:
-                print('P: ' + i['receiving']['choices'][0]['text'].strip())
+                print('P: ' + i['receiving']['choices'][0]['message']['content'].strip())
             if 'sending' in i and 'input' in i['sending']:
                 print('H: ' + i['sending']['input'].strip())
         
