@@ -34,8 +34,12 @@ if __name__ == '__main__':
             elif s == 'history':
                 for line in server.history: print(line)
             elif s == 'reset':
-                server.reset()
+                server.reset(server.user)
                 print('Dialogue history reset.')
+            elif s == 'start interview':
+                server.reset(server.user)
+                server.history.append('How would you start the conversation?')
+                print(server.respond(s).getText())
             elif s:
                 print(server.respond(s).getText())
     except KeyboardInterrupt:

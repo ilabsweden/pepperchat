@@ -1,46 +1,44 @@
 # -*- coding: utf-8 -*-
 
 ###########################################################
-# This module implements the main dialogue functionality for Pepper. 
+# This module implements the main dialogue functionality for Pepper, based on ChatGPT.
 #
 # Syntax:
 #    python scriptname --pip <ip> --pport <port>
 #
 #    --pip <ip>: specify the ip of your robot (without specification it will use the ROBOT_IP defined below
 #
-# Author: Johannes Bramauer, Vienna University of Technology and Erik Billing, University of Skovde
-# Created: May 30, 2018 and updated spring 2022. 
+# Author: Erik Billing, University of Skovde based on code from Johannes Bramauer, Vienna University of Technology
+# Created: May 30, 2018 and updated spring progressively during in the period 2022-05 to 2024-04. 
 # License: MIT
 ###########################################################
 
 ROBOT_PORT = 9559 # Robot
 ROBOT_IP = "pepper.local" # Pepper default
 
-AUTODEC = True
-
 from optparse import OptionParser
 import re
 import naoqi
 import time
-import sys
+import sys, os
 import codecs
 from naoqi import ALProxy
-
-participantId = raw_input('Participant ID: ')
-
 from oaichat.oaiclient import OaiClient
+
+START_PROMPT = codecs.open(os.getenv('DIALOGUE_START_PROMPTFILE'),encoding='utf-8').read() if os.path.isfile(os.getenv('DIALOGUE_START_PROMPTFILE')) else None
+participantId = raw_input('Participant ID: ')
+ALIVE = int(participantId) % 2 == 1
+
 chatbot = OaiClient(user=participantId)
 chatbot.reset()
 
-class DialogueSpeechReceiverModule(naoqi.ALModule):
+
+class DialogueModule(naoqi.ALModule):
     """
-    Use this object to get call back from the ALMemory of the naoqi world.
-    Your callback needs to be a method with two parameter (variable name, value).
+    Main dialogue module. Depends on both the ChatGPT service and the Speech Recognion module.
     """
-    
     
     def __init__( self, strModuleName, strNaoIp ):
-        self.autodec = AUTODEC 
         self.misunderstandings=0
         self.log = codecs.open('dialogue.log','a',encoding='utf-8')
         try:
@@ -56,16 +54,25 @@ class DialogueSpeechReceiverModule(naoqi.ALModule):
         self.stop()
 
     def start( self ):
+        self.configureSpeechRecognition()
         self.memory = naoqi.ALProxy("ALMemory", self.strNaoIp, ROBOT_PORT)
         self.memory.subscribeToEvent("SpeechRecognition", self.getName(), "processRemote")
         print( "INF: ReceiverModule: started!" )
         try:
             self.posture = ALProxy("ALRobotPosture", self.strNaoIp, ROBOT_PORT)
-            self.aup = ALProxy("ALAnimatedSpeech",  self.strNaoIp, ROBOT_PORT)
-            #self.aup = ALProxy("ALSpeech",  self.strNaoIp, ROBOT_PORT)
+            if ALIVE:
+                self.aup = ALProxy("ALAnimatedSpeech",  self.strNaoIp, ROBOT_PORT)
+            else:
+                self.aup = ALProxy("ALTextToSpeech",  self.strNaoIp, ROBOT_PORT)
         except RuntimeError:
             print ("Can't connect to Naoqi at ip \"" + self.strNaoIp + "\" on port " + str(ROBOT_PORT) +".\n"
                "Please check your script arguments. Run with -h option for help.")
+
+        if START_PROMPT:
+            answer = self.encode(chatbot.respond(START_PROMPT))
+            self.aup.say(answer)
+        self.listen(True)
+        print('Listening...')
 
     def stop( self ):
         print( "INF: ReceiverModule: stopping..." )
@@ -75,6 +82,45 @@ class DialogueSpeechReceiverModule(naoqi.ALModule):
     def version( self ):
         return "2.0"
 
+    def configureSpeechRecognition(self):
+        self.speechRecognition = ALProxy("SpeechRecognition")
+        #self.speechRecognition.calibrate()
+
+        AUTODEC = True
+        if(AUTODEC==False):
+            print("False, auto-detection not available")
+            #one-shot recording for at least 5 seconds
+            self.speechRecognition = ALProxy("SpeechRecognition")
+            self.speechRecognition.start()
+            self.speechRecognition.setHoldTime(5)
+            self.speechRecognition.setIdleReleaseTime(1.7)
+            self.speechRecognition.setMaxRecordingDuration(10)
+            #self.speechRecognition.startRecording()
+        else:
+            print("True, auto-detection selected")
+            # auto-detection
+            self.speechRecognition = ALProxy("SpeechRecognition")
+            #self.speechRecognition.start()
+            self.speechRecognition.setHoldTime(2.5)
+            self.speechRecognition.setIdleReleaseTime(2.0)
+            self.speechRecognition.setMaxRecordingDuration(10)
+            self.speechRecognition.setLookaheadDuration(0.5)
+            #self.speechRecognition.setLanguage("de-de")
+            #self.speechRecognition.calibrate()
+            self.speechRecognition.setAutoDetectionThreshold(8)
+            #self.speechRecognition.startRecording()
+        self.listen(False) # Ensure that speech recog is off from previous instance. 
+
+    def listen(self,enable):
+        if enable:
+            self.speechRecognition.start()
+            self.speechRecognition.enableAutoDetection()
+        else:
+            #always disable to not detect its own speech
+            self.speechRecognition.disableAutoDetection()
+            #and stop if it was already recording another time
+            self.speechRecognition.pause()
+
     def encode(self,s):
         s = s.replace(u'å','a').replace(u'ä','a').replace(u'ö','o')
         s = s.replace(u'Skovde','Schoe the')
@@ -83,15 +129,12 @@ class DialogueSpeechReceiverModule(naoqi.ALModule):
     def processRemote(self, signalName, message):
         self.log.write('INP: ' + message + '\n')
         if message == 'error': 
-            print('Input not recognized, continue listen')
+            #print('Input not recognized, continue listen')
             return
-        if self.autodec:
-            #always disable to not detect its own speech
-            SpeechRecognition.disableAutoDetection()
-            #and stop if it was already recording another time
-            SpeechRecognition.pause()
+        self.listen(False)
+        
         # received speech recognition result
-        print("INPUT RECOGNIZED: \n"+message)
+        print("USER: \n"+message)
         #computing answer
         if message=='error':
             self.misunderstandings +=1
@@ -107,20 +150,13 @@ class DialogueSpeechReceiverModule(naoqi.ALModule):
         else:
             self.misunderstandings = 0
             answer = self.encode(chatbot.respond(message))
-            print('DATA RECEIVED AS ANSWER:\n'+answer)
+            print('ROBOT:\n'+answer)
         #text to speech the answer
         self.log.write('ANS: ' + answer + '\n')
         self.aup.say(answer)
         self.react(answer)
         #time.sleep(2)
-        if self.autodec:
-            print("starting service speech-rec again")
-            SpeechRecognition.start()
-            print("autodec enabled")
-            SpeechRecognition.enableAutoDetection()
-        else:
-            #asking the Speech Recognition to LISTEN AGAIN
-            SpeechRecognition.startRecording()
+        self.listen(True)
 
     def react(self,s):
         if re.match(".*I.*sit down.*",s): # Sitting down
@@ -167,7 +203,7 @@ def main():
 
 
     try:
-        p = ALProxy("DialogueSpeechReceiver")
+        p = ALProxy("dialogueModule")
         p.exit()  # kill previous instance
     except:
         pass
@@ -176,51 +212,29 @@ def main():
     audio.setOutputVolume(70)
 
     AutonomousLife = ALProxy('ALAutonomousLife')
-    AutonomousLife.setState('solitary')
-    #AutonomousLife.setState('disabled')
-    
     RobotPosture = ALProxy('ALRobotPosture')
-    #AutonomousLife.setState('solitary')
-    #RobotPosture.goToPosture('Stand',0.5)
+    if ALIVE:
+        AutonomousLife.setState('solitary')
+        AutonomousLife.stopAll()
+        AutonomousLife.switchFocus('julia-8b4016/behavior_1')
+        print('Odd participant number, autonomous life enabled.')
+    else:
+        if AutonomousLife.getState() != 'disabled':
+            AutonomousLife.setState('disabled')
+        RobotPosture.goToPosture('Stand',0.5)
+        print('Even participant number, autonomous life disabled.')
 
+    TabletService = ALProxy('ALTabletService')
+    TabletService.goToSleep()
+    
     # Reinstantiate module
 
     # Warning: ReceiverModule must be a global variable
     # The name given to the constructor must be the name of the
     # variable
-    global DialogueSpeechReceiver
-    DialogueSpeechReceiver = DialogueSpeechReceiverModule("DialogueSpeechReceiver", pip)
-    DialogueSpeechReceiver.start()
-
-    global SpeechRecognition
-    SpeechRecognition = ALProxy("SpeechRecognition")
-    SpeechRecognition.start()
-    #SpeechRecognition.calibrate()
-
-    if(AUTODEC==False):
-        print("False, auto-detection not available")
-        #one-shot recording for at least 5 seconds
-        SpeechRecognition = ALProxy("SpeechRecognition")
-        SpeechRecognition.start()
-        SpeechRecognition.setHoldTime(5)
-        SpeechRecognition.setIdleReleaseTime(1.7)
-        SpeechRecognition.setMaxRecordingDuration(10)
-        SpeechRecognition.startRecording()
-
-    else:
-        print("True, auto-detection selected")
-        # auto-detection
-        SpeechRecognition = ALProxy("SpeechRecognition")
-        SpeechRecognition.start()
-        SpeechRecognition.setHoldTime(2.5)
-        SpeechRecognition.setIdleReleaseTime(1.0)
-        SpeechRecognition.setMaxRecordingDuration(10)
-        SpeechRecognition.setLookaheadDuration(0.5)
-        #SpeechRecognition.setLanguage("de-de")
-        #SpeechRecognition.calibrate()
-        SpeechRecognition.setAutoDetectionThreshold(10)
-        SpeechRecognition.enableAutoDetection()
-        #SpeechRecognition.startRecording()
+    global dialogueModule
+    dialogueModule = DialogueModule("dialogueModule", pip)
+    dialogueModule.start()
 
     try:
         while True:
