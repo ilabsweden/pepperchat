@@ -107,7 +107,7 @@ class DialogueModule(naoqi.ALModule):
             self.speechRecognition.setLookaheadDuration(0.5)
             #self.speechRecognition.setLanguage("de-de")
             #self.speechRecognition.calibrate()
-            self.speechRecognition.setAutoDetectionThreshold(8)
+            self.speechRecognition.setAutoDetectionThreshold(6)
             #self.speechRecognition.startRecording()
         self.listen(False) # Ensure that speech recog is off from previous instance. 
 
