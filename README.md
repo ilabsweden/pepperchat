@@ -3,6 +3,11 @@
 The code interfaces [OpenAI ChatGPT](https://openai.com/) with the [Aldebaran](https://www.aldebaran.com/en) Pepper and Nao robots, allowing open verbal conversation with these robots on a wide range of subjects.
 
 ## Video of the Result
+
+### April 2024 update
+[![Pepper Dialogue](img/Pepper-prompt-2024-04.png)](https://youtu.be/1T3SLaut6wI?si=lggZ70EGl287Ke1G)
+
+### Original rlease, June 2022
 [![Pepper Dialogue](img/Pepper-prompt.png)](https://youtu.be/zip90jyv1i4)
 
 ## Installation
