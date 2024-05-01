@@ -25,15 +25,16 @@ NaoQi is old and runs on Python 2.7 while OpenAI requires Python 3. We therefore
 
 Now we need a few of dependencies:
 
-* Install all dependencies for Python 2: ```python -m pip install -r .\requirements.py2.txt```
+* Install all dependencies for Python 2: ```python2 -m pip install -r .\requirements.py2.txt```
 * Install all dependencies for Python 3: ```python3 -m pip install -r .\requirements.py3.txt```
 
 We will use VS Code to run things, you may also use another environment if you prefer. 
 
 Now we need the Python NaoQi API for communicating with the Pepper robot. 
 
-* Download and extract [NaoQi Python SDK](https://www.softbankrobotics.com/emea/en/support/pepper-naoqi-2-9/downloads-softwares/former-versions?os=45&category=108) to a folder (pynaoqi-python2.7-2.5.7.1-win32-vs2013/lib) of your choice and add its path the PYTHONPATH environment variable in Windows. 
-* You may also want to install [Choreographe 2.5.10.7](https://www.softbankrobotics.com/emea/en/support/pepper-naoqi-2-9/downloads-softwares/former-versions?os=45&category=108). It is however not strictly needed. 
+* Download and extract NaoQi Python SDK for [Nao](https://support.unitedrobotics.group/en/support/solutions/articles/80001018812-nao-6-downloads) or [Pepper](https://support.unitedrobotics.group/en/support/solutions/articles/80001024221-pepper-2-5-downloads) 
+* Add the pynaoqi folder (e.g. *pynaoqi-python2.7-2.5.7.1-win32-vs2013/lib*) to the PYTHONPATH environment variable in Windows. 
+* You may also want to install *Choreographe* for [Nao](https://support.unitedrobotics.group/en/support/solutions/articles/80001018812-nao-6-downloads) or [Pepper](https://support.unitedrobotics.group/en/support/solutions/articles/80001024221-pepper-2-5-downloads). It is however not strictly needed to run *Pepper Chat*.
 
 Finally, we are ready to check out the repository. 
 
@@ -60,7 +61,7 @@ We will use [VS Code](https://code.visualstudio.com/) to run things, you may als
 
 Now we need the Python NaoQi API for communicating with the Pepper robot. 
 
-* Download and extract NaoQi Python SDK for [Nao](https://www.softbankrobotics.com/emea/en/support/nao-6/downloads-softwares) or [Pepper](https://www.softbankrobotics.com/emea/en/support/pepper-naoqi-2-9/downloads-softwares/former-versions?os=45&category=108) matching the version of your robot's software. Tested with Pynaoqi 2.8.6.
+* Download and extract NaoQi Python SDK for [Nao](https://support.unitedrobotics.group/en/support/solutions/articles/80001018812-nao-6-downloads) or [Pepper](https://support.unitedrobotics.group/en/support/solutions/articles/80001024221-pepper-2-5-downloads) matching the version of your robot's software. Tested with NAOqi 2.5.10.7.
 * Update your terminal profile (e.g. *.zshrc*) with the following:
     * export PYTHONPATH=${PYTHONPATH}:/path/to/python-sdk/lib/python2.7/site-packages
     * export DYLD_LIBRARY_PATH=${DYLD_LIBRARY_PATH}:/path/to/python-sdk/lib
