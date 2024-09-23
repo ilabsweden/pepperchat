@@ -1,6 +1,9 @@
 *.pyc
 *.dump
 
+# Virtual Environments
+venv*
+
 # Notebook
 .ipynb_checkpoints/*
 
