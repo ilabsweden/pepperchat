@@ -56,7 +56,7 @@ class OaiServer(OaiChat):
                     for k,v in r.json.items():
                         response[k] = v        
                 response['time'] = datetime.datetime.now().isoformat()
-                print('Sending response:',response)        
+                #print('Sending response:',response)        
                 self.send(response)
         except zmq.error.ContextTerminated as e:
             pass
