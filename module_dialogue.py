@@ -47,14 +47,14 @@ class DialogueModule(naoqi.ALModule):
             self.BIND_PYTHON( self.getName(),"callback" )
             self.strNaoIp = strNaoIp
             #self.session = qi.Session()
-        except BaseException, err:
+        except(BaseException, err):
             print( "ERR: ReceiverModule: loading error: %s" % str(err) )
  
-    def __del__( self ):
+    def __del__(self):
         print( "INF: ReceiverModule.__del__: cleaning everything" )
         self.stop()
 
-    def start( self ):
+    def start(self):
         self.configureSpeechRecognition()
         self.memory = naoqi.ALProxy("ALMemory", self.strNaoIp, ROBOT_PORT)
         self.memory.subscribeToEvent("SpeechRecognition", self.getName(), "processRemote")
@@ -66,12 +66,12 @@ class DialogueModule(naoqi.ALModule):
         self.listen(True)
         print('Listening...')
 
-    def stop( self ):
+    def stop(self):
         print( "INF: ReceiverModule: stopping..." )
         self.memory.unsubscribe(self.getName())
         print( "INF: ReceiverModule: stopped!" )
 
-    def version( self ):
+    def version(self):
         return "2.0"
 
     def configureTextToSpeech(self):
@@ -129,11 +129,10 @@ class DialogueModule(naoqi.ALModule):
             self.speechRecognition.pause()
 
     def encode(self,s):
-        #s = s.replace(u'å','a').replace(u'ä','a').replace(u'ö','o')
-        #s = s.replace(u'Skovde','Schoe the')
         return codecs.encode(s,'utf8','ignore')
 
     def processRemote(self, signalName, message):
+        message = codecs.decode(message, 'utf8')
         self.log.write('INP: ' + message + '\n')
         if message == 'error': 
             #print('Input not recognized, continue listen')
@@ -156,11 +155,11 @@ class DialogueModule(naoqi.ALModule):
             print('ERROR, DEFAULT ANSWER:\n'+answer)
         else:
             self.misunderstandings = 0
-            answer = self.encode(chatbot.respond(message))
+            answer = chatbot.respond(message)
             print('ROBOT:\n'+answer)
         #text to speech the answer
         self.log.write('ANS: ' + answer + '\n')
-        self.aup.say(answer)
+        self.aup.say(self.encode(answer))
         self.react(answer)
         #time.sleep(2)
         self.listen(True)
