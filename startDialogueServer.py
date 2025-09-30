@@ -11,19 +11,19 @@
 # License: Copyright reserved to the author. 
 ###########################################################
 
+import os
 from oaichat.oaiserver import OaiServer
 from optparse import OptionParser
-
 
 parser = OptionParser()
 parser.add_option("--prompt",
     help="Path to propot file.",
     dest="prompt")
-parser.set_defaults(prompt='pepper')
+parser.set_defaults(prompt=os.getenv('OPENAI_PROMPTFILE'))
   
 if __name__ == '__main__':
     (opts, args_) = parser.parse_args()
-    server = OaiServer(user='User 1',prompt=opts.prompt + '.prompt')
+    server = OaiServer(user='User 1',prompt=opts.prompt)
     server.start()
     try: 
         print('Type an input message to test your chatbot. Type "history" to print dialogue history or "exit" to quit the server.')
