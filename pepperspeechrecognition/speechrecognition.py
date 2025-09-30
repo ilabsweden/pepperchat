@@ -38,13 +38,13 @@ SAMPLE_RATE = 48000         # Hz, be careful changing this, both google and Naoq
 CALIBRATION_DURATION = 4    # seconds, timespan during which calibration is performed (summing up RMS values and calculating mean)
 CALIBRATION_THRESHOLD_FACTOR = 1.5  # factor the calculated mean RMS gets multiplied by to determine the auto detection threshold (after calibration)
 
-DEFAULT_LANGUAGE = "en-us"  # RFC5646 language tag, e.g. "en-us", "de-de", "fr-fr",... <http://stackoverflow.com/a/14302134>
-
 WRITE_WAV_FILE = False      # write the recorded audio to "out.wav" before sending it to google. intended for debugging purposes
 PRINT_RMS = False           # prints the calculated RMS value to the console, useful for setting the threshold
 
 PREBUFFER_WHEN_STOP = False # Fills pre-buffer with last samples when stopping recording. WARNING: has performance issues!
 
+import os,dotenv
+dotenv.load_dotenv()
 
 class SpeechRecognitionModule(naoqi.ALModule):
     """
@@ -356,9 +356,9 @@ class SpeechRecognitionModule(naoqi.ALModule):
         print 'INF: AutoDetection Disabled '
         return
 
-    def setLanguage(self, language = DEFAULT_LANGUAGE):
+    def setLanguage(self, language = os.getenv('LANGUAGE_SPEECHRECOGNITION')):
         self.language = language
-        print 'SET: language set to ' + language
+        print('SET: language set to',language)
         return
 
     # used for RMS calculation
