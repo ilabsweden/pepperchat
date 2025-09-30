@@ -20,14 +20,15 @@ from raw_to_wav import rawToWav
 from optparse import OptionParser
 import naoqi
 import numpy as np
-import time
-import sys
+import os, sys
 import threading
 from naoqi import ALProxy
 from google import Recognizer, UnknownValueError, RequestError
 from numpy import sqrt, mean, square
 import traceback
 
+import dotenv
+dotenv.load_dotenv()
 
 RECORDING_DURATION = 10     # seconds, maximum recording time, also default value for startRecording(), Google Speech API only accepts up to about 10-15 seconds
 LOOKAHEAD_DURATION = 1.0    # seconds, for auto-detect mode: amount of seconds before the threshold trigger that will be included in the request
@@ -38,13 +39,10 @@ SAMPLE_RATE = 48000         # Hz, be careful changing this, both google and Naoq
 CALIBRATION_DURATION = 4    # seconds, timespan during which calibration is performed (summing up RMS values and calculating mean)
 CALIBRATION_THRESHOLD_FACTOR = 1.5  # factor the calculated mean RMS gets multiplied by to determine the auto detection threshold (after calibration)
 
-DEFAULT_LANGUAGE = "en-us"  # RFC5646 language tag, e.g. "en-us", "de-de", "fr-fr",... <http://stackoverflow.com/a/14302134>
-
 WRITE_WAV_FILE = False      # write the recorded audio to "out.wav" before sending it to google. intended for debugging purposes
 PRINT_RMS = False           # prints the calculated RMS value to the console, useful for setting the threshold
 
 PREBUFFER_WHEN_STOP = False # Fills pre-buffer with last samples when stopping recording. WARNING: has performance issues!
-
 
 class SpeechRecognitionModule(naoqi.ALModule):
     """
@@ -93,7 +91,7 @@ class SpeechRecognitionModule(naoqi.ALModule):
             self.preBufferLength = 0    # length in samples (len(self.preBuffer) just counts entries)
 
             # init parameters
-            self.language = DEFAULT_LANGUAGE
+            self.language = os.getenv('LANGUAGE_SPEECHRECOGNITION')
             self.idleReleaseTime = IDLE_RELEASE_TIME
             self.holdTime = HOLD_TIME
             self.lookaheadBufferSize = LOOKAHEAD_DURATION * SAMPLE_RATE
@@ -356,9 +354,9 @@ class SpeechRecognitionModule(naoqi.ALModule):
         print 'INF: AutoDetection Disabled '
         return
 
-    def setLanguage(self, language = DEFAULT_LANGUAGE):
+    def setLanguage(self, language = os.getenv('LANGUAGE_SPEECHRECOGNITION')):
         self.language = language
-        print 'SET: language set to ' + language
+        print('SET: language set to', language)
         return
 
     # used for RMS calculation

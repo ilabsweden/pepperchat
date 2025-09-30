@@ -53,7 +53,8 @@ class OaiChat:
     self.history.append({'role':'user','content':inputText})
     #print(self.history)
     response = self.client.chat.completions.create(
-      model="gpt-3.5-turbo-1106",
+      #model="gpt-3.5-turbo-1106",
+      model="gpt-5-mini",
       #response_format={ "type": "json_object" },
       #user=self.user,
       messages=self.history,
