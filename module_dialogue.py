@@ -58,16 +58,7 @@ class DialogueModule(naoqi.ALModule):
         self.configureSpeechRecognition()
         self.memory = naoqi.ALProxy("ALMemory", self.strNaoIp, ROBOT_PORT)
         self.memory.subscribeToEvent("SpeechRecognition", self.getName(), "processRemote")
-        print( "INF: ReceiverModule: started!" )
-        try:
-            self.posture = ALProxy("ALRobotPosture", self.strNaoIp, ROBOT_PORT)
-            if ALIVE:
-                self.aup = ALProxy("ALAnimatedSpeech",  self.strNaoIp, ROBOT_PORT)
-            else:
-                self.aup = ALProxy("ALTextToSpeech",  self.strNaoIp, ROBOT_PORT)
-        except RuntimeError:
-            print ("Can't connect to Naoqi at ip \"" + self.strNaoIp + "\" on port " + str(ROBOT_PORT) +".\n"
-               "Please check your script arguments. Run with -h option for help.")
+        self.configureTextToSpeech()
 
         if START_PROMPT:
             answer = self.encode(chatbot.respond(START_PROMPT))
@@ -82,6 +73,21 @@ class DialogueModule(naoqi.ALModule):
 
     def version( self ):
         return "2.0"
+
+    def configureTextToSpeech(self):
+        try:
+            self.posture = ALProxy("ALRobotPosture", self.strNaoIp, ROBOT_PORT)
+            self.tts = ALProxy("ALTextToSpeech",  self.strNaoIp, ROBOT_PORT)
+            if ALIVE:
+                self.aup = ALProxy("ALAnimatedSpeech",  self.strNaoIp, ROBOT_PORT)
+            else:
+                self.aup = self.tts
+        except RuntimeError:
+            print ("Can't connect to Naoqi at ip \"" + self.strNaoIp + "\" on port " + str(ROBOT_PORT) +".\n"
+               "Please check your script arguments. Run with -h option for help.")
+        
+        self.tts.setLanguage(os.getenv('LANGUAGE_PEPPER'))
+        print(self.tts.getLanguage())
 
     def configureSpeechRecognition(self):
         self.speechRecognition = ALProxy("SpeechRecognition")
@@ -212,12 +218,16 @@ def main():
     audio = ALProxy("ALAudioDevice")
     audio.setOutputVolume(70)
 
+    Dialog = ALProxy('ALDialog')
+    Dialog.stopDialog()
+    Dialog.deactivateTopic('all')
+
     AutonomousLife = ALProxy('ALAutonomousLife')
     RobotPosture = ALProxy('ALRobotPosture')
     if ALIVE:
         AutonomousLife.setState('solitary')
         AutonomousLife.stopAll()
-        AutonomousLife.switchFocus('julia-8b4016/behavior_1')
+        #AutonomousLife.switchFocus('julia-8b4016/behavior_1')
         print('Odd participant number, autonomous life enabled.')
     else:
         if AutonomousLife.getState() != 'disabled':
