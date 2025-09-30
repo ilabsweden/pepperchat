@@ -129,9 +129,9 @@ class DialogueModule(naoqi.ALModule):
             self.speechRecognition.pause()
 
     def encode(self,s):
-        s = s.replace(u'å','a').replace(u'ä','a').replace(u'ö','o')
-        s = s.replace(u'Skovde','Schoe the')
-        return codecs.encode(s,'ascii','ignore')
+        #s = s.replace(u'å','a').replace(u'ä','a').replace(u'ö','o')
+        #s = s.replace(u'Skovde','Schoe the')
+        return codecs.encode(s,'utf8','ignore')
 
     def processRemote(self, signalName, message):
         self.log.write('INP: ' + message + '\n')
