@@ -44,9 +44,6 @@ PRINT_RMS = False           # prints the calculated RMS value to the console, us
 
 PREBUFFER_WHEN_STOP = False # Fills pre-buffer with last samples when stopping recording. WARNING: has performance issues!
 
-import os,dotenv
-dotenv.load_dotenv()
-
 class SpeechRecognitionModule(naoqi.ALModule):
     """
     Use this object to get call back from the ALMemory of the naoqi world.
