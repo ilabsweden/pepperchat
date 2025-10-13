@@ -76,10 +76,11 @@ class OaiChat:
   def loadPrompt(self,promptFile):
     promptFile = promptFile or 'openai.prompt'
     promptPath = promptFile if os.path.isfile(promptFile) else os.path.join(os.path.dirname(__file__),promptFile)
-    prompt = [] # [{"role": "system", "content": "You are a helpful robot designed to output JSON."}]
+    prompt = []
     if not os.path.isfile(promptPath):
       print('WARNING: Unable to locate OpenAI prompt file',promptFile)
     else:
+      print('Using prompt file:',promptPath)
       with codecs.open(promptPath,encoding='utf-8') as f:
         prompt.append({'role':'system','content':f.read()})
     return prompt
