@@ -6,8 +6,11 @@ import os, sys
 
 DEFAULTS = {
     'LOGDIR': 'logs',
+    'OPENAI_KEY': '',
     'OPENAI_PROMPTFILE': 'openai.prompt',
-    'CHATBOT_SERVER_ADDRESS': 'tcp://localhost:5556'
+    'CHATBOT_SERVER_ADDRESS': 'tcp://localhost:5556',
+    'LANGUAGE_SPEECHRECOGNITION': 'en-us',
+    'LANGUAGE_PEPPER': 'English',
 }
 
 if sys.version_info[0] > 2:

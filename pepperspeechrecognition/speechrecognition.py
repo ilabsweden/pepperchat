@@ -20,14 +20,15 @@ from raw_to_wav import rawToWav
 from optparse import OptionParser
 import naoqi
 import numpy as np
-import time
-import sys
+import os, sys
 import threading
 from naoqi import ALProxy
 from google import Recognizer, UnknownValueError, RequestError
 from numpy import sqrt, mean, square
 import traceback
 
+import dotenv
+dotenv.load_dotenv()
 
 RECORDING_DURATION = 10     # seconds, maximum recording time, also default value for startRecording(), Google Speech API only accepts up to about 10-15 seconds
 LOOKAHEAD_DURATION = 1.0    # seconds, for auto-detect mode: amount of seconds before the threshold trigger that will be included in the request
@@ -93,7 +94,7 @@ class SpeechRecognitionModule(naoqi.ALModule):
             self.preBufferLength = 0    # length in samples (len(self.preBuffer) just counts entries)
 
             # init parameters
-            self.language = DEFAULT_LANGUAGE
+            self.language = os.getenv('LANGUAGE_SPEECHRECOGNITION')
             self.idleReleaseTime = IDLE_RELEASE_TIME
             self.holdTime = HOLD_TIME
             self.lookaheadBufferSize = LOOKAHEAD_DURATION * SAMPLE_RATE

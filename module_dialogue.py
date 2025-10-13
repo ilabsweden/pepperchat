@@ -47,27 +47,18 @@ class DialogueModule(naoqi.ALModule):
             self.BIND_PYTHON( self.getName(),"callback" )
             self.strNaoIp = strNaoIp
             #self.session = qi.Session()
-        except BaseException, err:
+        except(BaseException, err):
             print( "ERR: ReceiverModule: loading error: %s" % str(err) )
  
-    def __del__( self ):
+    def __del__(self):
         print( "INF: ReceiverModule.__del__: cleaning everything" )
         self.stop()
 
-    def start( self ):
+    def start(self):
         self.configureSpeechRecognition()
         self.memory = naoqi.ALProxy("ALMemory", self.strNaoIp, ROBOT_PORT)
         self.memory.subscribeToEvent("SpeechRecognition", self.getName(), "processRemote")
-        print( "INF: ReceiverModule: started!" )
-        try:
-            self.posture = ALProxy("ALRobotPosture", self.strNaoIp, ROBOT_PORT)
-            if ALIVE:
-                self.aup = ALProxy("ALAnimatedSpeech",  self.strNaoIp, ROBOT_PORT)
-            else:
-                self.aup = ALProxy("ALTextToSpeech",  self.strNaoIp, ROBOT_PORT)
-        except RuntimeError:
-            print ("Can't connect to Naoqi at ip \"" + self.strNaoIp + "\" on port " + str(ROBOT_PORT) +".\n"
-               "Please check your script arguments. Run with -h option for help.")
+        self.configureTextToSpeech()
 
         if START_PROMPT:
             answer = self.encode(chatbot.respond(START_PROMPT))
@@ -75,13 +66,28 @@ class DialogueModule(naoqi.ALModule):
         self.listen(True)
         print('Listening...')
 
-    def stop( self ):
+    def stop(self):
         print( "INF: ReceiverModule: stopping..." )
         self.memory.unsubscribe(self.getName())
         print( "INF: ReceiverModule: stopped!" )
 
-    def version( self ):
+    def version(self):
         return "2.0"
+
+    def configureTextToSpeech(self):
+        try:
+            self.posture = ALProxy("ALRobotPosture", self.strNaoIp, ROBOT_PORT)
+            self.tts = ALProxy("ALTextToSpeech",  self.strNaoIp, ROBOT_PORT)
+            if ALIVE:
+                self.aup = ALProxy("ALAnimatedSpeech",  self.strNaoIp, ROBOT_PORT)
+            else:
+                self.aup = self.tts
+        except RuntimeError:
+            print ("Can't connect to Naoqi at ip \"" + self.strNaoIp + "\" on port " + str(ROBOT_PORT) +".\n"
+               "Please check your script arguments. Run with -h option for help.")
+        
+        self.tts.setLanguage(os.getenv('LANGUAGE_PEPPER'))
+        print(self.tts.getLanguage())
 
     def configureSpeechRecognition(self):
         self.speechRecognition = ALProxy("SpeechRecognition")
@@ -123,11 +129,10 @@ class DialogueModule(naoqi.ALModule):
             self.speechRecognition.pause()
 
     def encode(self,s):
-        s = s.replace(u'å','a').replace(u'ä','a').replace(u'ö','o')
-        s = s.replace(u'Skovde','Schoe the')
-        return codecs.encode(s,'ascii','ignore')
+        return codecs.encode(s,'utf8','ignore')
 
     def processRemote(self, signalName, message):
+        message = codecs.decode(message, 'utf8')
         self.log.write('INP: ' + message + '\n')
         if message == 'error': 
             #print('Input not recognized, continue listen')
@@ -150,11 +155,11 @@ class DialogueModule(naoqi.ALModule):
             print('ERROR, DEFAULT ANSWER:\n'+answer)
         else:
             self.misunderstandings = 0
-            answer = self.encode(chatbot.respond(message))
+            answer = chatbot.respond(message)
             print('ROBOT:\n'+answer)
         #text to speech the answer
         self.log.write('ANS: ' + answer + '\n')
-        self.aup.say(answer)
+        self.aup.say(self.encode(answer))
         self.react(answer)
         #time.sleep(2)
         self.listen(True)
@@ -212,12 +217,16 @@ def main():
     audio = ALProxy("ALAudioDevice")
     audio.setOutputVolume(70)
 
+    Dialog = ALProxy('ALDialog')
+    Dialog.stopDialog()
+    Dialog.deactivateTopic('all')
+
     AutonomousLife = ALProxy('ALAutonomousLife')
     RobotPosture = ALProxy('ALRobotPosture')
     if ALIVE:
         AutonomousLife.setState('solitary')
         AutonomousLife.stopAll()
-        AutonomousLife.switchFocus('julia-8b4016/behavior_1')
+        #AutonomousLife.switchFocus('julia-8b4016/behavior_1')
         print('Odd participant number, autonomous life enabled.')
     else:
         if AutonomousLife.getState() != 'disabled':
