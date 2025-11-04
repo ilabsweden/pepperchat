@@ -6,7 +6,7 @@ import traceback
 
 import numpy as np
 
-from udp import UdpSender, UdpReceiver, UdpReceiver2
+from udp import UdpSender, UdpReceiver
 
 DEFAULT_MULTICAST_IP = "224.1.1.5"
 DEFAULT_UDP_PORT = 50005
@@ -199,7 +199,7 @@ class AudioStreamReceiver:
 
        
         def loop():
-            with UdpReceiver2(on_receive, *self._udp_parms):
+            with UdpReceiver(on_receive, *self._udp_parms):
                 age_threshold = .1 # TODO: Uppskatta förväntad tid från flödet
                 while self._running.is_set():
                     with self._lock:

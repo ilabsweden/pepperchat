@@ -34,47 +34,7 @@ class UdpSender:
     def close(self):
         self.sock.close()
 
-
 class UdpReceiver:
-    def __init__(self, port, multicast_ip=None, max_buf_size = 65536):
-        self.port = port
-        self.max_buf_size = max_buf_size
-        self.multicast_req = None
-        if is_multicast_ip(multicast_ip):
-            self.multicast_req = struct.pack("4s4s", socket.inet_aton(multicast_ip), socket.inet_aton(get_local_ip()))
-            
-    def start(self, callback):
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, self.max_buf_size)
-        sock.bind(("", self.port))
-        if self.multicast_req:
-            sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, self.multicast_req)  
-
-        self._running = threading.Event()
-        self._running.set()
-        def receive_loop():
-            while self._running.is_set():
-                data, _ = sock.recvfrom(self.max_buf_size)
-                try:
-                    callback(data)
-                except:
-                    traceback.print_exc()
-
-            if self.multicast_req:
-                sock.setsockopt(socket.IPPROTO_IP, socket.IP_DROP_MEMBERSHIP, self.multicast_req)
-            sock.close()
-        if IS_PY2:
-            t = threading.Thread(target=receive_loop)
-            t.setDaemon(True)
-            t.start()
-        else:
-            t = threading.Thread(target=receive_loop, daemon=True).start()
-
-    def stop(self):
-        self._running.clear()
-    
-class UdpReceiver2:
     def __init__(self, callback, port, multicast_ip=None, max_buf_size = 65536):
         self.callback = callback
         self.port = port
