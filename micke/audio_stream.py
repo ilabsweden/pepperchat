@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# Should be kept useable by python2
 import struct
 import threading
 import time

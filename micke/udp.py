@@ -1,3 +1,4 @@
+# Should be kept useable by python2
 import socket
 import struct
 import sys

@@ -1,0 +1,8 @@
+numpy
+pyaudio
+scipy
+deepgram-sdk
+dotenv
+google-cloud-speech
+torch
+silero-vad
