@@ -16,6 +16,7 @@
 ROBOT_PORT = 9559 # Robot
 ROBOT_IP = "pepper.local" # Pepper default
 
+import functools
 from optparse import OptionParser
 import re
 import threading
@@ -39,7 +40,7 @@ class DummyChatbot:
     def respond(self, msg):
         return codecs.encode(msg,'utf8','ignore') if isinstance(msg,str) else msg
     
-if 1:
+if 0:
     from oaichat.oaiclient import OaiClient
     chatbot = OaiClient(user=participantId)
     chatbot.reset()
@@ -73,9 +74,15 @@ class DialogueModule2(naoqi.ALModule):
         self.configureTextToSpeech()
         self.state_reporter = RobotStateReporter()
         self.transcript_receiver = TranscriptReceiver(self.handle_input_message)
+        self.touch = self.memory.subscriber("TouchChanged")
+        self.touch_id = self.touch.signal.connect(functools.partial(self.on_touched, "TouchChanged"))
         if START_PROMPT:
             answer = chatbot.respond(START_PROMPT)
             self.say_string(answer)
+
+    def on_touched(self, name, value):
+        print("on_touched",name,value)
+   
 
     def stop(self):
         print( "INF: " + self.__class__.__name__ + ": stopping..." )
