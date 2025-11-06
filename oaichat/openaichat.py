@@ -60,7 +60,7 @@ class OaiChat:
     try:
       response = self.client.chat.completions.create(
         #model="gpt-3.5-turbo-1106",
-        model="gpt-5-mini", 
+        model="gpt-4o-mini", 
         #response_format={ "type": "json_object" },
         #user=self.user,
         messages=self.history,

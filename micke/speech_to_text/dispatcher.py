@@ -1,9 +1,7 @@
-import re
 import threading
 import time
 import traceback
 from typing import List
-
 import numpy as np
 from google_transcriber import GoogleTranscriber
 from deepgram_transcriber import DeepgramTranscriber
@@ -12,18 +10,6 @@ import pcm_utils
 import silerovad
 import __parentdir
 from comm import TranscriptSender, RobotStateListener, RobotState
-
-class TimeSlot:
-    def __init__(self):
-        self.start = time.time()
-        self.end = -1
-    def done(self):
-        self.end = time.time()
-    def overlaps(self, some_start, some_dur):
-        if self.end < 0:
-            return some_start > self.start
-        some_end = some_start + some_dur
-        return self.start < some_start < self.end or self.start < some_end < self.end
 
 def main():
     def on_transcript(result:TranscriberResult):
@@ -35,8 +21,8 @@ def main():
             best_transcript = sorted(result.transcripts, key=lambda t: t.confidence)[-1].transcript
             transcript_sender.send(best_transcript)
     transcript_sender = TranscriptSender()
-    talkslots:List[TimeSlot] = []
 
+    
     if 1:
         #GoogleTranscriber.PRINT_DEBUG = True
         silerovad.SileroVad.PRINT_DEBUG = True
@@ -53,22 +39,19 @@ def main():
         audio_callback = transcriber.push_pcm16_frames
 
     transcriber.add_transcript_callback(on_transcript)
-    mute = threading.Event()
+    mute_mic = threading.Event()
     def on_robot_state_change(state:RobotState):
         if state.talking:
-            mute.set()
+            mute_mic.set()
         else:
-            mute.clear()
+            mute_mic.clear()
         print(state.__dict__)
     robot_state_listener = RobotStateListener(on_robot_state_change)
     def muteable_audio_callback(sample_rate:int, channel_cnt:int, frames:np.ndarray):
-        if mute.is_set():
+        if mute_mic.is_set():
             frames *= 0
         audio_callback(sample_rate, channel_cnt, frames)
-    if 0:
-        pcm_utils.listen_on_streamed_audio([muteable_audio_callback])
-    else:
-        pcm_utils.listen_on_local_mic(16000,[muteable_audio_callback], channel_cnt=1)
+    pcm_utils.listen_on_local_mic(16000,[muteable_audio_callback], channel_cnt=1)
 
 
 if __name__ == "__main__":

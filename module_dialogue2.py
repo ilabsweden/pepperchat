@@ -20,6 +20,7 @@ import functools
 from optparse import OptionParser
 import re
 import threading
+import traceback
 from micke.comm import TranscriptReceiver, RobotStateReporter
 import naoqi
 import time
@@ -36,16 +37,16 @@ participantId = raw_input('Participant ID: ')
 ALIVE = int(participantId) % 2 == 1
 
 class DummyChatbot:
-    START_PROMPT = ""
     def respond(self, msg):
         return codecs.encode(msg,'utf8','ignore') if isinstance(msg,str) else msg
     
-if 1:
+if participantId == 213:
+    START_PROMPT = ""
+    chatbot = DummyChatbot()
+else:
     from oaichat.oaiclient import OaiClient
     chatbot = OaiClient(user=participantId)
     chatbot.reset()
-else:
-    chatbot = DummyChatbot()
 
 
 
@@ -75,16 +76,22 @@ class DialogueModule2(naoqi.ALModule):
         self.state_reporter = RobotStateReporter()
         self.transcript_receiver = TranscriptReceiver(self.handle_input_message)
         #self.touch = ALProxy("ALTouch", self.strNaoIp, ROBOT_PORT)
-
-
+        self.memory.subscribeToEvent("TouchChanged", self.getName(), "on_touch_changed")
+        self.touched = False
         if START_PROMPT:
             answer = chatbot.respond(START_PROMPT)
             self.say_string(answer)
 
-    def on_touched(self, name, value):
-        print("on_touched",name,value)
-   
+    def on_touch_changed(self, name, touches):
+        touched = False
+        for touch in touches:
+            touched = touched or (len(touch) > 1 and touch[1] == True)
+        if touched != self.touched:
+            self.touched = touched
+            if touched:
+                self.stop_talking()
 
+   
     def stop(self):
         print( "INF: " + self.__class__.__name__ + ": stopping..." )
         self.memory.unsubscribe(self.getName())
@@ -116,29 +123,27 @@ class DialogueModule2(naoqi.ALModule):
         self.aup.say(self.encode(text))
         self.state_reporter.report_talking(False)
     def stop_talking(self):
+        print("Stop talking!")
         self.tts.stopAll()
         self.state_reporter.report_talking(False)
 
     def handle_input_message(self, message):
         # type: (str) -> None
-        def handle_it():
-            #message = message if isinstance(message, str) else codecs.decode(message, 'utf8')
-            self.log.write('INP: ' + message + '\n')
-            print("USER: \n"+message)
-            if message == "stfu":
-                self.stop_talking()
-                return
-            # received speech recognition result
+        self.log.write('INP: ' + message + '\n')
+        print("USER: \n"+message)
+        if message == "stfu":
+            self.stop_talking()
+            return
+        # received speech recognition result
+        try:
             answer = chatbot.respond(message)
-            print('ROBOT:\n'+answer)
+            print('ROBOT:\n',answer)
             #text to speech the answer
             self.log.write('ANS: ' + answer + '\n')
             self.say_string(answer)
             self.react(answer)
-        #time.sleep(2)
-        t = threading.Thread(target=handle_it)    
-        t.setDaemon(True)
-        t.start()
+        except:
+            traceback.print_exc()
 
     def react(self,s):
         if re.match(".*I.*sit down.*",s): # Sitting down
@@ -147,7 +152,6 @@ class DialogueModule2(naoqi.ALModule):
             self.posture.goToPosture("Stand",1.0)
         elif re.match(".*I.*(lie|lyi).*down.*",s): # Lying down
             self.posture.goToPosture("LyingBack",1.0)
-        
 
 def main():
     """ Main entry point
