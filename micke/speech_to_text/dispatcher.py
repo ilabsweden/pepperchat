@@ -5,6 +5,7 @@ from deepgram_transcriber import DeepgramTranscriber
 from transcriber import TranscriberResult
 import pcm_utils
 import silerovad
+import __parentdir
 from transcript_comm import TranscriptSender
 
 
