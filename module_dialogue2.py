@@ -40,7 +40,7 @@ class DummyChatbot:
     def respond(self, msg):
         return codecs.encode(msg,'utf8','ignore') if isinstance(msg,str) else msg
     
-if 0:
+if 1:
     from oaichat.oaiclient import OaiClient
     chatbot = OaiClient(user=participantId)
     chatbot.reset()
@@ -74,8 +74,9 @@ class DialogueModule2(naoqi.ALModule):
         self.configureTextToSpeech()
         self.state_reporter = RobotStateReporter()
         self.transcript_receiver = TranscriptReceiver(self.handle_input_message)
-        self.touch = self.memory.subscriber("TouchChanged")
-        self.touch_id = self.touch.signal.connect(functools.partial(self.on_touched, "TouchChanged"))
+        #self.touch = ALProxy("ALTouch", self.strNaoIp, ROBOT_PORT)
+
+
         if START_PROMPT:
             answer = chatbot.respond(START_PROMPT)
             self.say_string(answer)
