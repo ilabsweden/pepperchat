@@ -18,6 +18,8 @@ class Transcript:
 @dataclass
 class TranscriberResult:
     transcriber: object
+    start_time: float
+    duration: float
     is_final: bool
     transcripts: List[Transcript]
     additional_data: object
@@ -34,9 +36,11 @@ class Transcriber:
         if callback in self._transcript_callbacks:
             self._transcript_callbacks.remove(callback)
 
-    def _on_transcribed(self, transcripts, is_final, additional_data):
+    def _on_transcribed(self, start_time, duration, transcripts, is_final, additional_data):
         transcript_result = TranscriberResult(
             transcriber=self,
+            start_time=start_time,
+            duration = duration,
             is_final=is_final,
             transcripts=transcripts,
             additional_data=additional_data

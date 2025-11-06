@@ -12,7 +12,6 @@ import pcm_utils
 import urllib.parse
 
 from transcriber import Transcriber, Transcript, TranscriberResult, TranscriptWord
-from transcript_comm import TranscriptSender
 
 import dotenv
 dotenv.load_dotenv()
@@ -41,6 +40,7 @@ class DeepgramTranscriber(Transcriber):
         self._running = threading.Event()
         self.config = DeepgramConfig(language = "sv-SE")
         self.pcm_processor = pcm_utils.PcmProcessor(16000, 1, frames_per_chunk=320)
+        self.start_time = 0
         self.start()
 
     def push_pcm16_frames(self, sample_rate:int, channel_cnt:int, frames:np.ndarray):
@@ -60,12 +60,21 @@ class DeepgramTranscriber(Transcriber):
                     ) for alt in channel.get("alternatives", []) if alt.get("transcript", "")
                 ]
                 if transcripts:
-                    self._on_transcribed(transcripts, is_final, channel)
+                    self._on_transcribed(
+                        start_time=self.start_time,
+                        duration=data.get("duration"),
+                        transcripts=transcripts, 
+                        is_final=is_final, 
+                        additional_data=channel
+                    )
             if speech_final:
                 self.debug_print("speech_final")
 
         elif response_type == "Error":
             print(f"\n[Deepgram error] {data.get('message')}", file=sys.stderr)
+        elif response_type == "SpeechStarted":
+            self.debug_print(response_type)
+            self.start_time = time.time()
         else:
             self.debug_print(response_type)
         
@@ -129,13 +138,13 @@ class DeepgramTranscriber(Transcriber):
 
 def test():
     def on_transcript(result:TranscriberResult):
-        print(f"{result.transcriber.__class__.__name__}")
-        for t in result.transcripts:
-            print(f"   {t.transcript} (confidence: {t.confidence:.03f})")
+        if result.is_final:
+            alt = result.transcripts[0]
+            print(f"{alt.transcript} (confidence: {alt.confidence}, start_time:{result.start_time}, duration:{result.duration})")
+        #print(result)
             
     transcriber = DeepgramTranscriber()
     transcriber.add_transcript_callback(on_transcript)
-    transcriber.start()
     DeepgramTranscriber.PRINT_DEBUG = True
     
     if 0:

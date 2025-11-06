@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Should be kept useable by python2
 import socket
 import struct
@@ -22,8 +23,9 @@ def is_multicast_ip(ip):
         parts = ip.split(".")
         return len(parts) == 4 and (224 <= int(parts[0]) <= 239)
 
-class UdpSender:
+class UdpSender(object):
     def __init__(self, port, receiver_ip, max_buf_size = 65536):
+        # type: (int, str, int) -> UdpSender
         self.address = (receiver_ip, port)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         if is_multicast_ip(receiver_ip):
@@ -35,8 +37,15 @@ class UdpSender:
     def close(self):
         self.sock.close()
 
-class UdpReceiver:
+    def __del__(self):
+        try:
+            self.close()
+        except:
+            pass
+
+class UdpReceiver(object):
     def __init__(self, callback, port, multicast_ip=None, max_buf_size = 65536):
+        # type: (callable[[str], None], int, str, int) -> UdpReceiver
         self.callback = callback
         self.port = port
         self.max_buf_size = max_buf_size

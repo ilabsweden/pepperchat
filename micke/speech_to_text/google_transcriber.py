@@ -76,7 +76,6 @@ class GoogleTranscriber(Transcriber):
         
     def _start(self):
         self._running.set()
-        
         def check_time_to_die():
             timeout = .5
             while self._running.is_set():
@@ -104,7 +103,7 @@ class GoogleTranscriber(Transcriber):
                 # send config once, then the audio chunks forever
                 yield config_request
                 yield from audio_generator()  
-
+            start_time = time.time()
             while self._running.is_set():
                 try:
                     responses = client.streaming_recognize(requests=request_iter())
@@ -113,9 +112,11 @@ class GoogleTranscriber(Transcriber):
                         for result in response.results:
                             if result.alternatives:
                                 self._on_transcribed(
-                                    [Transcript(alt.transcript, alt.confidence, [TranscriptWord(w.word, w.confidence) for w in alt.words]) for alt in result.alternatives],
-                                    result.is_final,
-                                    result
+                                    start_time=start_time,
+                                    duration = result.result_end_offset.seconds,
+                                    transcripts=[Transcript(alt.transcript, alt.confidence, [TranscriptWord(w.word, w.confidence) for w in alt.words]) for alt in result.alternatives],
+                                    is_final=result.is_final,
+                                    additional_data=result
                                 )
                 except:
                     traceback.print_exc()
@@ -134,8 +135,10 @@ def test():
         speech_end_callback=pcm_utils.playback_pcm16_frame_chunks
     )
     def on_transcript(result:TranscriberResult):
-        alt = result.transcripts[0]
-        print(f"{alt.transcript} (confidence: {alt.confidence})")
+        if result.is_final:
+            alt = result.transcripts[0]
+            print(f"{alt.transcript} (confidence: {alt.confidence}, start_time:{result.start_time}, duration:{result.duration})")
+        #print(result)
 
     transcriber.add_transcript_callback(on_transcript)
     if 0:
