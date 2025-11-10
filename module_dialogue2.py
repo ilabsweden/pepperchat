@@ -74,13 +74,13 @@ class DialogueModule2(naoqi.ALModule):
         self.memory = naoqi.ALProxy("ALMemory", self.strNaoIp, ROBOT_PORT)
         self.configureTextToSpeech()
         self.state_reporter = RobotStateReporter()
-        self.transcript_receiver = TranscriptReceiver(self.handle_input_message)
         #self.touch = ALProxy("ALTouch", self.strNaoIp, ROBOT_PORT)
         self.memory.subscribeToEvent("TouchChanged", self.getName(), "on_touch_changed")
         self.touched = False
         if START_PROMPT:
             answer = chatbot.respond(START_PROMPT)
             self.say_string(answer)
+        self.transcript_receiver = TranscriptReceiver(self.handle_input_message)
 
     def on_touch_changed(self, name, touches):
         touched = False
