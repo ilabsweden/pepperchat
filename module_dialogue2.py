@@ -57,6 +57,7 @@ class DialogueModule2(naoqi.ALModule):
     
     def __init__( self, strModuleName, strNaoIp ):
         self.misunderstandings=0
+        self.last_say = time.time()
         self.log = codecs.open('dialogue.log','a',encoding='utf-8')
         try:
             naoqi.ALModule.__init__(self, strModuleName )
@@ -122,6 +123,7 @@ class DialogueModule2(naoqi.ALModule):
         self.state_reporter.report_talking(True)
         self.aup.say(self.encode(text))
         self.state_reporter.report_talking(False)
+        self.last_say = time.time()
     def stop_talking(self):
         print("Stop talking!")
         self.tts.stopAll()
@@ -129,6 +131,10 @@ class DialogueModule2(naoqi.ALModule):
 
     def handle_input_message(self, message):
         # type: (str) -> None
+        if (time.time() - self.last_say) < 1:
+            print('Premature pseech input, ignoring.')
+            return
+        
         self.log.write('INP: ' + message + '\n')
         print("USER: \n"+message)
         if message == "stfu":
@@ -144,6 +150,7 @@ class DialogueModule2(naoqi.ALModule):
             self.react(answer)
         except:
             traceback.print_exc()
+        
 
     def react(self,s):
         if re.match(".*I.*sit down.*",s): # Sitting down
