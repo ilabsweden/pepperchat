@@ -1,4 +1,9 @@
+from typing import List
 import dotenv
+
+from pcm_processor import PcmProcessor
+import pcm_utils
+import silerovad
 dotenv.load_dotenv()
 import os, json, base64, threading, queue, time
 import numpy as np
@@ -9,11 +14,11 @@ from websocket import WebSocketApp
 API_KEY = os.environ.get("OPENAI_API_KEY", "")
 MODEL = "gpt-realtime"          # or: gpt-4o-realtime-preview, gpt-realtime-mini
 SAMPLE_RATE = 24000             # Realtime API expects PCM16 mono ~24 kHz
-CHUNK_MS = 30                   # ~30 ms frames
-VOICE = "alloy"                 # alloy, verse, coral, etc.
-SERVER_VAD = True               # let the server detect turn-taking
-INSTRUCTIONS = "Du är den svensktalande roboten Pepper."
+VOICE = "sage"                 # alloy, verse, coral, etc.
+INSTRUCTIONS = "Du är roboten Pepper. Du är glad och artig. Du pratar svenska, långsamt och tydligt."
 # -------------------
+
+USE_SILERO = True
 
 assert API_KEY, "Set OPENAI_API_KEY in your environment."
 
@@ -29,112 +34,135 @@ def audio_player():
             if chunk is None:
                 break
             out.write(chunk)
-
-def float_to_pcm16(float32):
-    float32 = np.clip(float32, -1.0, 1.0)
-    return (float32 * 32767.0).astype(np.int16).tobytes()
-
-def on_open(ws):
-    print("✅ WebSocket connected. Sending session.update...")
-    # Configure session: voice, formats, VAD, and instructions
-    session_update = {
-        "type": "session.update",
-        "session": {
-            "voice": VOICE,
-            "instructions": INSTRUCTIONS,
-            "turn_detection": {"type": "server_vad"} if SERVER_VAD else {"type": "none"},
-            "input_audio_format": "pcm16",
-            "output_audio_format": "pcm16",
-            "input_audio_transcription": {
-                "model": "gpt-4o-mini-transcribe",   # or gpt-4o-transcribe / whisper-1
-                "language": "sv"
-            } ,
-            #"temperature": 0.7,
-            #"max_output_tokens": 50,
-            #"modalities": ["text"],                      
-            "modalities": ["audio", "text"],                      
-        },
-    }
-    ws.send(json.dumps(session_update))
-
-    # Start microphone capture on a background thread
-    threading.Thread(target=stream_microphone, args=(ws,), daemon=True).start()
-    # Start speaker playback thread
-    threading.Thread(target=audio_player, daemon=True).start()
-
-def stream_microphone(ws):
-    """Continuously capture mic audio and append to input buffer in small chunks.
-       With server VAD, you don't need to send commit/response.create."""
-    blocksize = int(SAMPLE_RATE * (CHUNK_MS / 1000.0))  # samples per chunk
-    print("🎙️ Mic streaming... (Ctrl+C to quit)")
-    try:
-        with sd.InputStream(samplerate=SAMPLE_RATE, channels=1, dtype="int16") as stream:
-            while True:
-                data, _ = stream.read(blocksize)  # bytes
-                # Encode base64 and send append event
+class Oai:
+    def __init__(self):
+        def on_pcm16_frames(sample_rate:int, channel_cnt:int, frames:np.ndarray):
+            for chunk in self.pcm_processor.get_frame_chunks(sample_rate, channel_cnt, frames):
                 evt = {
                     "type": "input_audio_buffer.append",
-                    "audio": base64.b64encode(bytes(data)).decode("ascii"),
+                    "audio": base64.b64encode(bytes(chunk.tobytes())).decode("ascii"),
                 }
-                ws.send(json.dumps(evt))
-                # (When SERVER_VAD is enabled, the server commits automatically)
-                # throttle a bit to avoid tight loop
-                time.sleep(CHUNK_MS / 1000.0)
-    except Exception as e:
-        print("Mic error:", e)
-        try:
-            ws.close()
-        except:
-            pass
+                self.ws.send(json.dumps(evt))
 
-def on_message(ws, message):
-    # The server sends JSON text messages with events.
-    # We care about response.audio.delta for audio chunks and response.completed to mark end.
-    try:
-        evt = json.loads(message)
-    except Exception:
-        # Some servers may send non-JSON frames (unlikely). Ignore.
-        return
+        def on_speech_end(sample_rate:int, channel_cnt:int, pcm16_chunks:List[np.ndarray]):
+            resp = {
+                "type": "response.create",
+                "response": {
+                    "temperature": 0.8,
+                    #"max_output_tokens": 50,
+                    # Optional: per-turn instructions/system biasing
+                    #"instructions": INSTRUCTIONS + " Svara kortfattat."
+                }
+            }
+            self.ws.send(json.dumps(resp))
 
-    t = evt.get("type", "")
-    if t == "response.audio.delta":
-        # Base64 PCM16 chunk from the assistant
-        b = base64.b64decode(evt.get("delta", ""))
-        play_queue.put(b)
-    elif ".delta" in t:
-        pass
-        #print (t,evt.get("delta"))
-    elif t == "error":
-        print("❌ Realtime error:", evt)
-    elif t == "conversation.item.input_audio_transcription.completed":
-        print("USER:", evt.get("transcript"))
-    elif t == "response.audio_transcript.done":
-        print("ROBOT:", evt.get("transcript"))
-    # Debug other events:
-    # else:
-    #     print("evt:", t)
+        self.pcm_processor = PcmProcessor(SAMPLE_RATE, 1, millis_per_chunk=100)
+        self.silero = silerovad.SileroVad(
+            threshold=.35,
+            head_millis=1000,
+            speech_stream_callback=on_pcm16_frames,
+            speech_end_callback=on_speech_end
+        )
 
-def on_error(ws, error):
-    print("WebSocket error:", error)
+    def start(self):
+        def on_open(ws):
+            print("WebSocket connected. Sending session.update...")
+            # Configure session: voice, formats, VAD, and instructions
+            session_update = {
+                "type": "session.update",
+                "session": {
+                    "voice": VOICE,
+                    "instructions": INSTRUCTIONS,
+                    "turn_detection": {
+                        "type": "server_vad",
+                        "create_response": False # We decide ourselves when it's time for response
+                    },
+                    "input_audio_format": "pcm16",
+                    "output_audio_format": "pcm16",
+                    "input_audio_transcription": {
+                        "model": "gpt-4o-mini-transcribe",   # or gpt-4o-transcribe / whisper-1
+                        "language": "sv"
+                    } ,
+                    #"modalities": ["text"],                      
+                    "modalities": ["audio", "text"],                      
+                },
+            }
 
-def on_close(ws, code, msg):
-    print("🔌 WebSocket closed:", code, msg)
-    play_queue.put(None)
+            ws.send(json.dumps(session_update))
+                
+            # Start speaker playback thread
+            threading.Thread(target=audio_player, daemon=True).start()
+
+        def on_error(ws, error):
+            print("WebSocket error:", error)
+
+        def on_close(ws, code, msg):
+            print("🔌 WebSocket closed:", code, msg)
+            play_queue.put(None)
+
+        def on_message(ws, message):
+            # The server sends JSON text messages with events.
+            try:
+                evt = json.loads(message)
+            except Exception:
+                # Some servers may send non-JSON frames (unlikely). Ignore.
+                return
+
+            t = evt.get("type", "")
+            print(t)
+            if t == "response.audio.delta":
+                b = base64.b64decode(evt.get("delta", ""))
+                #print("ljudbytes:",len(b))
+                play_queue.put(b)
+            elif ".delta" in t:
+                print (t,evt.get("delta"))
+            elif t == "error":
+                print("ERROR:", evt)
+            elif t == "conversation.item.input_audio_transcription.completed":
+                print("USER:", evt.get("transcript"))
+            elif t == "response.audio_transcript.done":
+                print("ROBOT:", evt.get("transcript"))
+            elif t == "response.output_item.done":
+                if item := evt.get("item"):
+                    for content in item.get("content"):
+                        print("CONTENT:",content)
+                        print("ROBOT:", content.get("text"))
+            elif t == "response.done":
+                print("DONE")
+            elif t == "response.created":
+                print(evt)
+            # else:
+            #     print(t)
+
+        self.ws = WebSocketApp(
+            WS_URL,
+            header=[
+                "Authorization: Bearer " + API_KEY,
+                "OpenAI-Beta: realtime=v1",
+            ],
+            on_open=on_open,
+            on_message=on_message,
+            on_error=on_error,
+            on_close=on_close,
+        )
+        threading.Thread(target=self.ws.run_forever, daemon=True).start()        
+
+    def push_pcm16_frames(self, sample_rate:int, channel_cnt:int, frames:np.ndarray):
+        self.silero.push_pcm16_frames(sample_rate, channel_cnt, frames)
+
+
+
+    
 
 def main():
-    headers = [
-        "Authorization: Bearer " + API_KEY,
-        "OpenAI-Beta: realtime=v1",
-    ]
-    ws = WebSocketApp(
-        WS_URL,
-        header=headers,
-        on_open=on_open,
-        on_message=on_message,
-        on_error=on_error,
-        on_close=on_close,
-    )
-    ws.run_forever()  # blocking
+    oai = Oai()
+    oai.start()
+
+    silerovad.SileroVad.PRINT_DEBUG = True
+    pcm_utils.listen_on_local_mic(48000,[oai.push_pcm16_frames], channel_cnt=1)
 
 if __name__ == "__main__":
     main()
+    med_audio = {'type': 'response.done', 'event_id': 'event_CboCU20qDEylLj8slTfRK', 'response': {'object': 'realtime.response', 'id': 'resp_CboCTudL9dqu8i75rhbwK', 'status': 'completed', 'status_details': None, 'output': [{'id': 'item_CboCT1h5xb7DG8jp5BLLm', 'object': 'realtime.item', 'type': 'message', 'status': 'completed', 'role': 'assistant', 'content': [{'type': 'audio', 'transcript': 'God morgon! Hur är läget med dig idag?'}]}], 'conversation_id': 'conv_CboCPuWpw58bqle1kEGzn', 'modalities': ['text', 'audio'], 'voice': 'alloy', 'output_audio_format': 'pcm16', 'temperature': 0.8, 'max_output_tokens': 'inf', 'usage': {'total_tokens': 122, 'input_tokens': 34, 'output_tokens': 88, 'input_token_details': {'text_tokens': 26, 'audio_tokens': 8, 'image_tokens': 0, 'cached_tokens': 0, 'cached_tokens_details': {'text_tokens': 0, 'audio_tokens': 0, 'image_tokens': 0}}, 'output_token_details': {'text_tokens': 22, 'audio_tokens': 66}}, 'metadata': None}}
+    utan = {'type': 'response.done', 'event_id': 'event_CboGD3Sb25wcTySRJK0qw', 'response': {'object': 'realtime.response', 'id': 'resp_CboGCntUtZx2GrfOuUa0E', 'status': 'completed', 'status_details': None, 'output': [{'id': 'item_CboGCABi1Ifa7KI1aLCW7', 'object': 'realtime.item', 'type': 'message', 'status': 'completed', 'role': 'assistant', 'content': [{'type': 'text', 'text': 'God morgon! Hur kan jag hjälpa dig idag?'}]}], 'conversation_id': 'conv_CboG75Icyv3Brg5cmbMB3', 'modalities': ['text'], 'voice': 'alloy', 'output_audio_format': 'pcm16', 'temperature': 0.8, 'max_output_tokens': 'inf', 'usage': {'total_tokens': 50, 'input_tokens': 37, 'output_tokens': 13, 'input_token_details': {'text_tokens': 26, 'audio_tokens': 11, 'image_tokens': 0, 'cached_tokens': 0, 'cached_tokens_details': {'text_tokens': 0, 'audio_tokens': 0, 'image_tokens': 0}}, 'output_token_details': {'text_tokens': 13, 'audio_tokens': 0}}, 'metadata': None}}
+    #print (json.dumps(med_audio, indent=4))
