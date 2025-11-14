@@ -77,7 +77,7 @@ class GoogleTranscriber(Transcriber):
     def _start(self):
         self._running.set()
         def check_time_to_die():
-            timeout = .5
+            timeout = .1
             while self._running.is_set():
                 if time.time() - self._last_pcm_recive_time > timeout:
                     self._stop()

@@ -6,3 +6,6 @@ dotenv
 google-cloud-speech
 torch
 silero-vad
+keyboard
+sounddevice
+aec-audio-processing
