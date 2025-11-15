@@ -1,4 +1,5 @@
-from typing import List
+import traceback
+from typing import Callable, List
 import dotenv
 
 from pcm_processor import PcmProcessor
@@ -24,17 +25,16 @@ assert API_KEY, "Set OPENAI_API_KEY in your environment."
 
 WS_URL = f"wss://api.openai.com/v1/realtime?model={MODEL}"
 
-# Audio out: write raw PCM16 to an output stream
-play_queue: "queue.Queue[bytes]" = queue.Queue()
 
-def audio_player():
-    with sd.RawOutputStream(samplerate=SAMPLE_RATE, channels=1, dtype="int16") as out:
-        while True:
-            chunk = play_queue.get()
-            if chunk is None:
-                break
-            out.write(chunk)
+class QueryResponse:
+    def __init__(self):
+        self.query_text = ""
+        self.response_text = ""
+    def to_string(self):
+        return str(self.__dict__)
+    
 class Oai:
+        
     def __init__(self):
         def on_pcm16_frames(sample_rate:int, channel_cnt:int, frames:np.ndarray):
             for chunk in self.pcm_processor.get_frame_chunks(sample_rate, channel_cnt, frames):
@@ -63,42 +63,45 @@ class Oai:
             speech_stream_callback=on_pcm16_frames,
             speech_end_callback=on_speech_end
         )
+        self.response_callback: Callable[[QueryResponse], None] = None
+        self.audio_callback: Callable[[bytes], None] = None
+        self.voice = VOICE
+        self._cur_response = QueryResponse()
+        self._response_audio_buffer = bytearray()
 
     def start(self):
         def on_open(ws):
-            print("WebSocket connected. Sending session.update...")
-            # Configure session: voice, formats, VAD, and instructions
+            print("WebSocket connected")
+            session_data = {
+                "instructions": INSTRUCTIONS,
+                "turn_detection": {
+                    "type": "server_vad",
+                    "create_response": False # We decide ourselves when it's time for response
+                },
+                "input_audio_format": "pcm16",
+                "output_audio_format": "pcm16",
+                "input_audio_transcription": {
+                    "model": "gpt-4o-mini-transcribe",   # or gpt-4o-transcribe / whisper-1
+                    "language": "sv"
+                } ,
+                "modalities": ["text", "audio"] if self.voice else ["text"],                      
+            }
+            if self.voice:
+                session_data["voice"] = self.voice
+
             session_update = {
                 "type": "session.update",
-                "session": {
-                    "voice": VOICE,
-                    "instructions": INSTRUCTIONS,
-                    "turn_detection": {
-                        "type": "server_vad",
-                        "create_response": False # We decide ourselves when it's time for response
-                    },
-                    "input_audio_format": "pcm16",
-                    "output_audio_format": "pcm16",
-                    "input_audio_transcription": {
-                        "model": "gpt-4o-mini-transcribe",   # or gpt-4o-transcribe / whisper-1
-                        "language": "sv"
-                    } ,
-                    #"modalities": ["text"],                      
-                    "modalities": ["audio", "text"],                      
-                },
+                "session": session_data,
             }
 
             ws.send(json.dumps(session_update))
-                
-            # Start speaker playback thread
-            threading.Thread(target=audio_player, daemon=True).start()
 
         def on_error(ws, error):
             print("WebSocket error:", error)
 
         def on_close(ws, code, msg):
-            print("🔌 WebSocket closed:", code, msg)
-            play_queue.put(None)
+            print("WebSocket closed:", code, msg)
+
 
         def on_message(ws, message):
             # The server sends JSON text messages with events.
@@ -109,30 +112,32 @@ class Oai:
                 return
 
             t = evt.get("type", "")
-            print(t)
+            #print(t)
+
             if t == "response.audio.delta":
                 b = base64.b64decode(evt.get("delta", ""))
-                #print("ljudbytes:",len(b))
-                play_queue.put(b)
-            elif ".delta" in t:
-                print (t,evt.get("delta"))
+                if self.audio_callback:
+                    self.audio_callback(b)
             elif t == "error":
                 print("ERROR:", evt)
             elif t == "conversation.item.input_audio_transcription.completed":
+                self._cur_response.query_text = evt.get("transcript")
                 print("USER:", evt.get("transcript"))
-            elif t == "response.audio_transcript.done":
-                print("ROBOT:", evt.get("transcript"))
-            elif t == "response.output_item.done":
-                if item := evt.get("item"):
-                    for content in item.get("content"):
-                        print("CONTENT:",content)
-                        print("ROBOT:", content.get("text"))
             elif t == "response.done":
-                print("DONE")
-            elif t == "response.created":
-                print(evt)
+                content = evt["response"]["output"][0]["content"][0]
+                text = content.get("text", content.get("transcript", "RESPONSE_CONTENT_ERROR"))
+                self._cur_response.response_text = text
+                print("RESPTEXT:",text)
+            elif t == "response.audio.done":
+                print(t)
             # else:
             #     print(t)
+            if t.endswith(".completed") or t.endswith(".done"):
+                if self._cur_response.query_text and self._cur_response.response_text:
+                    if self.response_callback:
+                        self.response_callback(self._cur_response)
+                    self._cur_response = QueryResponse()
+                    
 
         self.ws = WebSocketApp(
             WS_URL,
@@ -155,14 +160,33 @@ class Oai:
     
 
 def main():
-    oai = Oai()
-    oai.start()
+    play_queue: "queue.Queue[bytes]" = queue.Queue()
 
+    def audio_player():
+        with sd.RawOutputStream(samplerate=SAMPLE_RATE, channels=1, dtype="int16") as out:
+            while True:
+                chunk = play_queue.get()
+                if chunk is None:
+                    break
+                out.write(chunk)
+    threading.Thread(target=audio_player, daemon=True).start()                
+    
+    oai = Oai()
+    #oai.voice = None
+    oai.start()
+    def on_response(response:QueryResponse):
+        print(response.to_string())
+    def on_response_audio(data:bytes):
+        play_queue.put(data)
+
+    oai.response_callback = on_response
+    oai.audio_callback = on_response_audio
     silerovad.SileroVad.PRINT_DEBUG = True
     pcm_utils.listen_on_local_mic(48000,[oai.push_pcm16_frames], channel_cnt=1)
-
+    play_queue.put(None)
 if __name__ == "__main__":
     main()
     med_audio = {'type': 'response.done', 'event_id': 'event_CboCU20qDEylLj8slTfRK', 'response': {'object': 'realtime.response', 'id': 'resp_CboCTudL9dqu8i75rhbwK', 'status': 'completed', 'status_details': None, 'output': [{'id': 'item_CboCT1h5xb7DG8jp5BLLm', 'object': 'realtime.item', 'type': 'message', 'status': 'completed', 'role': 'assistant', 'content': [{'type': 'audio', 'transcript': 'God morgon! Hur är läget med dig idag?'}]}], 'conversation_id': 'conv_CboCPuWpw58bqle1kEGzn', 'modalities': ['text', 'audio'], 'voice': 'alloy', 'output_audio_format': 'pcm16', 'temperature': 0.8, 'max_output_tokens': 'inf', 'usage': {'total_tokens': 122, 'input_tokens': 34, 'output_tokens': 88, 'input_token_details': {'text_tokens': 26, 'audio_tokens': 8, 'image_tokens': 0, 'cached_tokens': 0, 'cached_tokens_details': {'text_tokens': 0, 'audio_tokens': 0, 'image_tokens': 0}}, 'output_token_details': {'text_tokens': 22, 'audio_tokens': 66}}, 'metadata': None}}
     utan = {'type': 'response.done', 'event_id': 'event_CboGD3Sb25wcTySRJK0qw', 'response': {'object': 'realtime.response', 'id': 'resp_CboGCntUtZx2GrfOuUa0E', 'status': 'completed', 'status_details': None, 'output': [{'id': 'item_CboGCABi1Ifa7KI1aLCW7', 'object': 'realtime.item', 'type': 'message', 'status': 'completed', 'role': 'assistant', 'content': [{'type': 'text', 'text': 'God morgon! Hur kan jag hjälpa dig idag?'}]}], 'conversation_id': 'conv_CboG75Icyv3Brg5cmbMB3', 'modalities': ['text'], 'voice': 'alloy', 'output_audio_format': 'pcm16', 'temperature': 0.8, 'max_output_tokens': 'inf', 'usage': {'total_tokens': 50, 'input_tokens': 37, 'output_tokens': 13, 'input_token_details': {'text_tokens': 26, 'audio_tokens': 11, 'image_tokens': 0, 'cached_tokens': 0, 'cached_tokens_details': {'text_tokens': 0, 'audio_tokens': 0, 'image_tokens': 0}}, 'output_token_details': {'text_tokens': 13, 'audio_tokens': 0}}, 'metadata': None}}
+    #print(utan["response"]["output"][0]["content"][0])
     #print (json.dumps(med_audio, indent=4))
