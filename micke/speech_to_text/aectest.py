@@ -1,3 +1,4 @@
+import queue
 import time
 import numpy as np, sounddevice as sd
 from scipy.io import wavfile
@@ -6,7 +7,7 @@ import aec_audio_processing as a
 
 SR = 16000
 
-def load_robot_frames(path, sr=SR):
+def load_wav(path, sr=SR):
     fs, x = wavfile.read(path)
     if x.ndim == 2:
         x = x.mean(axis=1)
@@ -29,12 +30,15 @@ frame = apm.get_frame_size()               # should be 160 at 16k
 # Optional delay hint:
 #apm.set_stream_delay(10)
 
-robot_gen = load_robot_frames("pladder.wav", SR)
+robot_out_frames = load_wav("pladder.wav", SR)
 
 # for dev in sd.query_devices():
 #     print(dev)
 # print(sd.query_devices())
 # exit()
+mic_queue:queue.Queue[bytes] = queue.Queue()
+robot_queue:queue.Queue[bytes] = queue.Queue()
+
 cleanstream = sd.OutputStream(channels=1, 
                samplerate=SR, 
                dtype='int16',
@@ -48,7 +52,7 @@ def callback(indata, outdata, frames, time, status):
         print("Audio status:", status)
     assert frames == frame, f"Device delivered {frames}, AEC expects {frame}"
 
-    far  = next(robot_gen)                 # int16[frame]
+    far  = next(robot_out_frames)                 # int16[frame]
     outdata[:] = far.reshape(-1,1)         # play robot to speakers
     near = indata[:,0].copy().astype(np.int16)
 
@@ -56,8 +60,8 @@ def callback(indata, outdata, frames, time, status):
     apm.process_reverse_stream(far.tobytes())
     out_bytes = apm.process_stream(near.tobytes())
     cleaned = np.frombuffer(out_bytes, dtype=np.int16)
-    cleanstream.write(cleaned)
     #cleanstream.write(indata)
+    cleanstream.write(cleaned)
 
     # TODO: send `cleaned` to your ASR or a file/stream
     # (Don't route cleaned back to outdata here, or you'll create a loop.)
