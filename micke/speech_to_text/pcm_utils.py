@@ -1,3 +1,4 @@
+import queue
 import __parentdir
 import threading
 import time
@@ -69,6 +70,45 @@ def listen_on_streamed_audio(callbacks:List[Callable[[int, int, np.ndarray], Non
         except:
             pass
 
+
+class AsyncAudioPlayer:
+    def __init__(self, sample_rate, channel_cnt = 1):
+        self._running = threading.Event()
+        self._queue = queue.Queue()
+        self._pcm_processor = PcmProcessor(sample_rate, 1, millis_per_chunk=100)
+        def loop():
+            self._running.set()
+            p = pyaudio.PyAudio()
+            outstream = p.open(
+                rate= sample_rate,
+                channels=channel_cnt,
+                output=True,
+                format=pyaudio.paInt16,
+                
+            )
+            while self._running.is_set():
+                outstream.write(self._queue.get().tobytes())
+            outstream.close()
+            p.terminate()
+
+            # with sd.RawOutputStream(samplerate=sample_rate, channels=channels, dtype="int16") as out:
+            #     while self._running.is_set():
+            #         out.write(self._queue.get().tobytes())
+        threading.Thread(target=loop, daemon=True).start()                
+
+    def is_playing(self):
+        return not self._queue.empty()
+    
+    def clear_queue(self):
+        try:
+            while True:
+                self._queue.get_nowait()
+        except:
+            pass    
+
+    def push_pcm16_frames(self, sample_rate:int, channel_cnt:int, frames:np.ndarray):
+        for chunk in self._pcm_processor.get_frame_chunks(sample_rate, channel_cnt, frames):
+            self._queue.put(chunk)
 
 def test():
     mgr = PcmProcessor(16000,1)#,millis_per_chunk=50)#,samples_per_chunk=320)

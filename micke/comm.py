@@ -27,7 +27,10 @@ ROBOT_STATE_UDP_IP = "224.1.1.7"
 class RobotState:
     def __init__(self):
         self.talking = False
-
+        self.head_touched = False
+    def __str__(self):
+        return str(self.__dict__)
+    
 class RobotStateReporter(udp.UdpSender):
     def __init__(self):
         super(RobotStateReporter, self).__init__(ROBOT_STATE_UDP_PORT, ROBOT_STATE_UDP_IP)
@@ -39,6 +42,11 @@ class RobotStateReporter(udp.UdpSender):
         # type: (bool) -> None
         if self.state.talking != t:
             self.state.talking = t
+            self.report_cur_state()
+    def report_head_touched(self, t):
+        # type: (bool) -> None
+        if self.state.head_touched != t:
+            self.state.head_touched = t
             self.report_cur_state()
 
 class RobotStateListener(udp.UdpReceiver):
