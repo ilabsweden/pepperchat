@@ -77,9 +77,13 @@ class Oai:
         return self._state
     
     def _set_state(self, state):
-        if self.state_callback and self._state != state:
-            self.state_callback(state)
-        self._state = state
+        if self._state != state:
+            if state == self.STATE_SENDING_SPEECH:
+                self.cancel_current()
+                self._cur_response = QueryResponse()
+            self._state = state
+            if self.state_callback:
+                self.state_callback(state)
     def start(self):
         def on_open(ws):
             print("WebSocket connected")
@@ -118,29 +122,37 @@ class Oai:
                 t = evt.get("type", "")
                 #print(t)
                 if t == "error":
+                    if error := evt.get("error"):
+                        if error.get("code") == "response_cancel_not_active":
+                            return
                     print("ERROR:", evt)
                 elif t == "response.audio.delta":
                     b = base64.b64decode(evt.get("delta", ""))
                     if self.response_audio_callback:
                         self.response_audio_callback(24000, 1, np.frombuffer(b, dtype=np.int16))
+                elif t == "conversation.item.input_audio_transcription.delta":
+                    self._cur_response.query_text += evt.get("delta")
                 elif t == "conversation.item.input_audio_transcription.completed":
-                    self._cur_response.query_text = evt.get("transcript")
-                    #print("USER:", evt.get("transcript"))
+                    self._cur_response.query_text += " "
+                    #print("USER:", evt.get("transcript"), evt)
                 elif t == "response.done":
                     if evt["response"]["status"] == "completed":
                         content = evt["response"]["output"][0]["content"][0]
                         text = content.get("text", content.get("transcript", "RESPONSE_CONTENT_ERROR"))
                         self._cur_response.response_text = text
-                    self._set_state(self.STATE_IDLE)
                         #print("RESPTEXT:",text)
+                    if self.query_response_callback:
+                        self.query_response_callback(self._cur_response)
+                    self._set_state(self.STATE_IDLE)
+                # else:
+                #     print(t,evt)
                 # elif t == "response.audio.done":
                 #     print(t)
 
-                if t.endswith(".completed") or t.endswith(".done"):
-                    if self._cur_response.query_text and self._cur_response.response_text:
-                        if self.query_response_callback:
-                            self.query_response_callback(self._cur_response)
-                        self._cur_response = QueryResponse()
+                # if t.endswith(".completed") or t.endswith(".done"):
+                #     if self._cur_response.query_text and self._cur_response.response_text:
+                #         if self.query_response_callback:
+                #             self.query_response_callback(self._cur_response)
                         
                     
             except Exception:
@@ -213,6 +225,7 @@ def main():
             "Du är glad och artig."
             "Du pratar svenska. Långsamt, tydligt och kortfattat."
         ),
+        #voice=None,
         query_response_callback = print,
         response_audio_callback = pepper.push_pcm16_frames,
         state_callback=print
