@@ -235,35 +235,46 @@ class SubtitleManager:
         self._consecutive_silent_sample_cnt = 0
         self.silence_timestamps = []
         self._sample_cnt = 0
+        self._sample_rate = -1
         self._full_text = ""
         self.sent_text = ""
         self._last_pcm_time = 0
         self._start_time = 0
         self._text_chunks:List[str] = []
+        self._cur_subtitle = ""
         def loop():
             while True:
                 now = time.time()
                 if self._sample_cnt > 0:
-                    time_since_last_pcm = now - self._last_pcm_time
-                    dur = now - self._start_time
-                    if time_since_last_pcm > 3:
+                    speech_dur = self._sample_cnt / self._sample_rate
+                    play_time = now - self._start_time
+                    remaining_time = speech_dur - play_time
+                    speech_input_done = time.time() - self._last_pcm_time > .5
+                    #print("speech_dur:",speech_dur, " play_time:", round(play_time,1), " remaining_time:", remaining_time)
+                    if speech_input_done and remaining_time < -3:
                         self.reset()
-                    elif time_since_last_pcm > .5:
-                        subtitles.set_text("XXXX" + self._full_text)
+                    elif speech_input_done and remaining_time <= 0:
+                        self._set_subtitle(self._full_text)
                     else:
-                        send_chunk_cnt = 1 + len([s for s in self.silence_timestamps if s > dur])
-                        if send_chunk_cnt < len(self._text_chunks):
-                            subtitles.set_text("".join(self._text_chunks[:send_chunk_cnt]))
-                    print("chunk_cnt:", len(self._text_chunks), " send_cnt:", send_chunk_cnt, " dur:", round(dur,1), " time_since_last_pcm:", round(time_since_last_pcm,1))
-                time.sleep(.1)
+                        send_chunk_cnt = 1 + len([s for s in self.silence_timestamps if s < play_time])
+                        if send_chunk_cnt <= len(self._text_chunks):
+                            self._set_subtitle("".join(self._text_chunks[:send_chunk_cnt]))
+                        #print("chunk_cnt:", len(self._text_chunks), " send_cnt:", send_chunk_cnt, " play_time:", round(play_time,1), "ts:",[round(ts,1) for ts in self.silence_timestamps] ," _text_chunks", self._text_chunks)
+                time.sleep(.2)
         threading.Thread(target=loop, daemon=True).start()
 
+    def _set_subtitle(self, text):
+        if text != self._cur_subtitle:
+            print(text)
+            self._cur_subtitle = text
+            subtitles.set_text(text)
     def reset(self):
         if self._sample_cnt > 0:
             print("reset:", self.silence_timestamps)
             self._full_text = ""
             self.silence_timestamps = []
             self._sample_cnt = 0
+            subtitles.set_text("")
    
 
     def push_text(self, text:str):
@@ -277,6 +288,7 @@ class SubtitleManager:
         if channel_cnt > 1:
             return False
         self._last_pcm_time = time.time()
+        self._sample_rate = sample_rate
         if self._sample_cnt == 0:
             self._start_time = time.time()
         abs_amplitudes = np.abs(frames)
@@ -291,12 +303,6 @@ class SubtitleManager:
                     print(self.silence_timestamps)
                 self._consecutive_silent_sample_cnt = 0
 
-# sm = SubtitleManager()
-# for c in list("Hej där! Vad kan jag hjälpa dig med idag?"):
-#     sm.push_text("" + c)
-# exit()
-# print(split_keep("Hej där! Vad kan jag hjälpa dig med idag?"))
-# exit()
 def main():
     subtitles.start_server()
     pepper = PepperSim()

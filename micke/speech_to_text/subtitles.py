@@ -42,7 +42,6 @@ _cur_text = ""
 def set_text(text:str):
     global _cur_text
     if _cur_text != text:
-        print(text)
         _cur_text = text
 
 _server: socketserver.TCPServer = None
