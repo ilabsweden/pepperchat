@@ -1,12 +1,14 @@
+from dataclasses import dataclass
 import re
 import traceback
-from typing import Callable, List
+from typing import Callable, List, Tuple
+import wave
 import dotenv
 import keyboard
+import silerovad
 
 from pcm_processor import PcmProcessor
 import pcm_utils
-import silerovad
 import subtitles
 dotenv.load_dotenv()
 import os, json, base64, threading, queue, time
@@ -228,8 +230,13 @@ def split_keep(text):
         out.append(parts[i] + parts[i+1])
     return out
 
+@dataclass
+class TimeFrame:
+    start:float = 0
+    dur:float = 0
+
 class SubtitleManager:
-    def __init__(self, signal_threshold=500, silence_duration_threshold=.2):
+    def __init__(self, signal_threshold=500, silence_duration_threshold=.1):
         self.signal_threshold = signal_threshold
         self.duration_threshold = silence_duration_threshold
         self._consecutive_silent_sample_cnt = 0
@@ -242,6 +249,8 @@ class SubtitleManager:
         self._start_time = 0
         self._text_chunks:List[str] = []
         self._cur_subtitle = ""
+        self._speech = bytearray()
+        self._silences_start_dur = []
         def loop():
             while True:
                 now = time.time()
@@ -252,14 +261,22 @@ class SubtitleManager:
                     speech_input_done = time.time() - self._last_pcm_time > .5
                     #print("speech_dur:",speech_dur, " play_time:", round(play_time,1), " remaining_time:", remaining_time)
                     if speech_input_done and remaining_time < -3:
+                        fname = f"{int(1000 * time.time())}.wav"
+                        if 1:
+                            ww = wave.open(fname, "wb")
+                            ww.setframerate(self._sample_rate)
+                            ww.setnchannels(1)
+                            ww.setsampwidth(2)
+                            ww.writeframesraw(self._speech)
+                        print(f"({[(round(start,2), round(dur,2)) for start, dur in self._silences_start_dur]}, {round(speech_dur,2)}, \"{self._full_text}\", \"{fname}\"),")
                         self.reset()
                     elif speech_input_done and remaining_time <= 0:
                         self._set_subtitle(self._full_text)
                     else:
-                        send_chunk_cnt = 1 + len([s for s in self.silence_timestamps if s < play_time])
-                        if send_chunk_cnt <= len(self._text_chunks):
-                            self._set_subtitle("".join(self._text_chunks[:send_chunk_cnt]))
-                        #print("chunk_cnt:", len(self._text_chunks), " send_cnt:", send_chunk_cnt, " play_time:", round(play_time,1), "ts:",[round(ts,1) for ts in self.silence_timestamps] ," _text_chunks", self._text_chunks)
+                        timed_texts = get_timed_texts(self._silences_start_dur, 0, self._full_text, None)
+                        new_subtitle = "".join([text for start, text in timed_texts if play_time >= start])
+                        if 1 or len(new_subtitle) > len(self._cur_subtitle):
+                            self._set_subtitle(new_subtitle)
                 time.sleep(.2)
         threading.Thread(target=loop, daemon=True).start()
 
@@ -270,23 +287,22 @@ class SubtitleManager:
             subtitles.set_text(text)
     def reset(self):
         if self._sample_cnt > 0:
-            print("reset:", self.silence_timestamps)
+            self._set_subtitle("")
             self._full_text = ""
             self.silence_timestamps = []
             self._sample_cnt = 0
+            self._speech.clear()
+            self._silences_start_dur = []
             subtitles.set_text("")
    
 
     def push_text(self, text:str):
         self._full_text += text
         self._text_chunks = split_keep(self._full_text)
-        # print(
-        #     self._full_text.rjust(100), 
-        #     self._text_chunks
-        # )
     def push_pcm16_frames(self, sample_rate:int, channel_cnt:int, frames:np.ndarray):
         if channel_cnt > 1:
             return False
+        self._speech.extend(frames.tobytes())
         self._last_pcm_time = time.time()
         self._sample_rate = sample_rate
         if self._sample_cnt == 0:
@@ -299,7 +315,12 @@ class SubtitleManager:
                 self._consecutive_silent_sample_cnt += 1
             else:
                 if self._consecutive_silent_sample_cnt >= silent_sample_cnt_threshold:
+                    self._silences_start_dur.append((
+                        (self._sample_cnt - self._consecutive_silent_sample_cnt) / sample_rate,
+                        self._consecutive_silent_sample_cnt / sample_rate
+                    ))
                     self.silence_timestamps.append(self._sample_cnt / sample_rate)
+                    print([(round(start,2), round(dur,2)) for start, dur in self._silences_start_dur])
                     print(self.silence_timestamps)
                 self._consecutive_silent_sample_cnt = 0
 
@@ -326,6 +347,7 @@ def main():
             "Du är roboten Pepper."
             "Du är glad och artig."
             "Du pratar svenska. Långsamt, tydligt och kortfattat."
+            "Använd korta meningar med ganska långa pauser mellan."
         ),
         #voice=None,
         query_update_callback = on_query_update,
@@ -340,20 +362,42 @@ def main():
     threading.Thread(target=muter, daemon=True).start()
     pcm_utils.listen_on_local_mic(48000,[oai.push_pcm16_frames], channel_cnt=1)
 
+def get_timed_texts(silences:List[Tuple[float,float]], dur:float, text:str, wavfile:str):
+    texts = split_keep(text)
+    if not texts:
+        return []
+    silences = silences.copy()
+    sil_cnt = min(len(silences), len(texts)-1)
+    silences_by_dur = sorted(silences, key=lambda start_dur: start_dur[1], reverse=True)[:sil_cnt]
+    start_times = [0] + [s[0]+s[1] for s in sorted(silences_by_dur, key=lambda start_dur: start_dur[0])]
+    timed_texts = []
+    for i,text in enumerate(texts):
+        if i < len(start_times):
+            timed_texts.append((start_times[i], text))
+    return timed_texts
+
+def test_ss(timestamps:List[float], dur:float, text:str, wavfile:str):
+    submgr = SubtitleManager()
+    submgr.push_text(text)
+    with wave.open(wavfile,"rb") as wr:
+        sr = wr.getframerate()
+        player=pcm_utils.AsyncAudioPlayer(sr)
+        while data:=wr.readframes(1024):
+            frames=np.frombuffer(data,np.int16)
+            submgr.push_pcm16_frames(sr,1,frames)
+            player.push_pcm16_frames(sr,1,frames)
+    while(submgr._sample_cnt):
+        time.sleep(.1)
+sstests=[
+    ([(0.16, 0.13), (0.97, 0.44), (2.5, 0.11), (2.67, 0.21), (3.78, 0.75), (6.68, 0.81), (8.06, 0.14), (9.41, 0.13)], 9.7, "Absolut, vi tar det lugnt och metodiskt. Vad är det första du vill gå igenom? Vi kan ta ett steg i taget.", "1763731796253.wav"),
+    ([(0.0, 0.14), (0.79, 0.73), (3.34, 0.8)], 5.9, "Hej där! Vad roligt att prata med dig. Vad funderar du på idag?", "1763731709710.wav"),
+    ([(0.0, 0.16), (1.68, 0.1), (2.09, 0.61), (3.78, 0.12)], 4.25, "Jag är här för att hjälpa dig, vad behöver du hjälp med?", "1763731741567.wav"),
+    ([(0.0, 0.2), (1.12, 0.13), (1.3, 0.45), (3.62, 0.78), (5.91, 0.21), (6.68, 0.63)], 8.45, "Självklart, vi ska se till att det blir kul. Vad har du för intresse eller idé? Jag är redo!", "1763731828707.wav"),    
+]
+# for ss in sstests:
+#     test_ss(*ss)
+#     #print(json.dumps(get_timed_texts(*ss), indent=4))
+# exit()
 if __name__ == "__main__":
 
-    # text = "Javisst, jag hjälper dig gärna. Vad är det du skulle vilja ha just nu? Något att veta, något att göra, eller kanske något helt annat? Jag anpassar mig efter dina behov."
-    # silences = [1.011, 3.3080416666666665, 6.210458333333333, 7.802833333333333, 9.612041666666666, 12.193333333333333]
-    # text_chunks = split_keep(text)
-    # titr = iter(text_chunks)
-    # tsil = iter(silences)
-    # start = time.time()
-    # print(next(titr))
-    # for t in silences:
-    #     while time.time() - start < t:
-    #         time.sleep(.01)
-    #     print(next(titr))
-        
-
-    # print(len(text_chunks), len(silences))
     main()
