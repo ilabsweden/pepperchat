@@ -9,3 +9,5 @@ silero-vad
 keyboard
 sounddevice
 aec-audio-processing
+websocket-client
+

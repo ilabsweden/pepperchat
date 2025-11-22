@@ -56,28 +56,28 @@
         }
         main = document.getElementById("main");
 
-        function splitKeep(text) {
-            const parts = text.split(/([.?!])/);
-            const out = [];
-
-            for (let i = 0; i < parts.length - 1; i += 2) {
-                out.push(parts[i] + parts[i + 1]);
+        function showSubtitles(text){
+            main.innerHTML = "";
+            function addChunk(chunk){
+                if(chunk){
+                    main.innerHTML += "<div class='sentence'>" + chunk + "</div>";
+                }
             }
-
-            return out;
-        }
-        function showText(text){
-            main.innerHTML = ""
-            sentences = splitKeep(text);
-            sentences.forEach((s)=>{main.innerHTML += "<div class='sentence'>" + s + "</div>"});
-
+            chunk = "";
+            for (var i = 0; i < text.length; i++){
+                c = text.charAt(i);
+                chunk += c;
+                if (".?!".indexOf(c) > 0){
+                    addChunk(chunk);
+                    chunk = "";
+                }
+            }
+            addChunk(chunk);
         }
         function poll(){
-            // showText("Hej! Jag ser att du verkar undra över något. Jag är här för att hjälpa dig. Vill du berätta lite mer om vad som hände? Då kan vi försöka reda ut det tillsammans.");
-            // return;
             sendData("", {"get_subtitles":1},(response)=>{
                 console.log(response);
-                showText(response);
+                showSubtitles(response);
                 main.classList.toggle("noConnection", false);
                 poll();
             }, (err)=>{

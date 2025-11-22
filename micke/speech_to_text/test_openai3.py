@@ -13,7 +13,6 @@ import subtitles
 dotenv.load_dotenv()
 import os, json, base64, threading, queue, time
 import numpy as np
-import sounddevice as sd
 from websocket import WebSocketApp
 
 API_KEY = os.environ.get("OPENAI_API_KEY", "")
@@ -223,87 +222,20 @@ class PepperSim:
     def push_pcm16_frames(self, sample_rate:int, channel_cnt:int, frames:np.ndarray):
         self.audio_player.push_pcm16_frames(sample_rate, channel_cnt, frames)
 
-def get_sentences(text) -> List[str]:
-    parts = re.split(r'([.?!])', text)
-    out = []
-    for i in range(0, len(parts)-1, 2):
-        out.append(parts[i] + parts[i+1])
-    return out
 
-class SubtitleManager:
-    def __init__(self, signal_threshold=500, silence_duration_threshold=.1):
-        self.signal_threshold = signal_threshold
-        self.duration_threshold = silence_duration_threshold
-        self._consecutive_silent_sample_cnt = 0
-        self._sample_cnt = 0
-        self._sample_rate = -1
-        self._collected_text = ""
-        self._last_pcm_time = 0
-        self._start_time = 0
-        self._cur_subtitle = ""
-        self._silences:List[Tuple[float,float]] = [] 
-        """(start, duration)"""
-        def loop():
-            while True:
-                now = time.time()
-                if self._sample_cnt > 0:
-                    speech_dur = self._sample_cnt / self._sample_rate
-                    play_time = now - self._start_time
-                    remaining_time = speech_dur - play_time
-                    pcm_input_done = time.time() - self._last_pcm_time > .5
-                    if pcm_input_done and remaining_time < -3:
-                        self.reset()
-                    elif pcm_input_done and remaining_time <= 0:
-                        self._set_subtitle(self._collected_text)
-                    else:
-                        if sentences := get_sentences(self._collected_text):
-                            applicable_silence_cnt = min(len(self._silences), len(sentences)-1)
-                            applicable_silences = sorted(self._silences, reverse=True, key=lambda silence: silence[1])[:applicable_silence_cnt]
-                            number_of_texts_to_show = 1 + len([silence for silence in applicable_silences if (silence[0] + silence[1]) < play_time])
-                            self._set_subtitle("".join([sentence.strip() for sentence in sentences[:number_of_texts_to_show]]))
-                time.sleep(.2)
-        threading.Thread(target=loop, daemon=True).start()
+class PepperSpeak:
+    def __init__(self):
+        self.text_sender = comm.TranscriptSender()
+        self.pending_sentences = []
+        self.wip_sentence = ""
+    def push_text(self, text):
+        self.wip_sentence += text
 
-    def _set_subtitle(self, text):
-        if text != self._cur_subtitle:
-            print(text)
-            self._cur_subtitle = text
-            subtitles.set_text(text)
-    def reset(self):
-        if self._sample_cnt > 0:
-            self._set_subtitle("")
-            self._collected_text = ""
-            self._sample_cnt = 0
-            self._silences = []
-   
-
-    def push_text(self, text:str):
-        self._collected_text += text
-
-    def push_pcm16_frames(self, sample_rate:int, channel_cnt:int, frames:np.ndarray):
-        if channel_cnt > 1:
-            return False
-        self._last_pcm_time = time.time()
-        self._sample_rate = sample_rate
-        if self._sample_cnt == 0:
-            self._start_time = time.time()
-        abs_amplitudes = np.abs(frames)
-        silent_sample_cnt_threshold = int(sample_rate * self.duration_threshold)
-        for amp in abs_amplitudes:
-            self._sample_cnt += 1
-            if amp < self.signal_threshold:
-                self._consecutive_silent_sample_cnt += 1
-            else:
-                if self._consecutive_silent_sample_cnt >= silent_sample_cnt_threshold:
-                    self._silences.append((
-                        (self._sample_cnt - self._consecutive_silent_sample_cnt) / sample_rate,
-                        self._consecutive_silent_sample_cnt / sample_rate
-                    ))
-                self._consecutive_silent_sample_cnt = 0
-
+    def on_robot_state_change(self, state:comm.RobotState):
+        pass
 def main():
-    subtitles.start_server()
     pepper = PepperSim()
+    text_sender = comm.TranscriptSender()
     def on_robot_state_change(state:comm.RobotState):
         print(state)
         if state.head_touched:
@@ -313,8 +245,13 @@ def main():
     def on_query_update(query:Query):
         if query.done:
             print(query)
+    subtitle_server = subtitles.SubtitleServer()
 
-    subtitle_manager = SubtitleManager()
+    def on_subtitle_update(text):
+        subtitle_server.set_text(text)
+        text_sender.send(text)
+    subtitle_manager = subtitles.AudioSynchronizedSubtitleProvider()
+
     def on_response_audio(sample_rate:int, channel_cnt:int, frames:np.ndarray):
         pepper.push_pcm16_frames(sample_rate, channel_cnt, frames)
         subtitle_manager.push_pcm16_frames(sample_rate, channel_cnt, frames)
