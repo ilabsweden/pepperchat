@@ -135,6 +135,7 @@ class Oai:
                     if error := evt.get("error"):
                         if error.get("code") == "response_cancel_not_active":
                             return
+                    # OBS! ERROR: {'type': 'error', 'event_id': 'event_Cf56YfnjwVCABifRNL02D', 'error': {'type': 'invalid_request_error', 'code': 'session_expired', 'message': 'Your session hit the maximum duration of 60 minutes.', 'param': None, 'event_id': None}}
                     print("ERROR:", evt)
                 elif t == "response.audio.delta":
                     b = base64.b64decode(evt.get("delta", ""))
@@ -204,6 +205,59 @@ class Oai:
         self._send_data({"type": "response.cancel"})
 
 import comm
+
+class PepperSpeak:
+    def __init__(self, subtitle_server:subtitles.SubtitleServer=None):
+        self.say_text_sender = comm.TranscriptSender()
+        self._sentences = []
+        
+        self._unsentenced_text = ""
+        self.subtitle_server = subtitle_server
+        self._robot_talking = False
+        self._last_text_receive_time = 0
+        self._thread_lock = threading.Lock()
+        def loop():
+            next_sentence_idx = 0
+            while True:
+                if self._last_text_receive_time > 0:
+                    sentence_cnt = len(self._sentences)
+                    got_all_text = time.time() - self._last_text_receive_time > .5
+                    if sentence_cnt <= next_sentence_idx:
+                        if got_all_text:
+                            if self._unsentenced_text:
+                                self._sentences.append(self._unsentenced_text)
+                                self._unsentenced_text = ""
+                            else:
+                                with self._thread_lock:
+                                    self._unsentenced_text = ""
+                                    self._sentences = []
+                                    next_sentence_idx = 0
+                                    self._last_text_receive_time = 0
+
+                    elif not self._robot_talking:
+                        sentences = self._sentences.copy()
+                        sentence = sentences[next_sentence_idx]
+                        self.say_text_sender.send(sentence)
+                        print("say:",sentence)
+                        next_sentence_idx += 1
+                        if subtitle_server:
+                            subtitle_server.set_text("".join(sentences[:next_sentence_idx]))
+                time.sleep(.2)
+        threading.Thread(target=loop, daemon=True).start()
+    
+    def push_text(self, text:str):
+        self._last_text_receive_time = time.time()
+        self._unsentenced_text += text
+        if sentences := subtitles.split_into_sentences(self._unsentenced_text):
+            self._unsentenced_text = self._unsentenced_text.removeprefix("".join(sentences))
+            self._sentences += sentences
+
+
+    def on_robot_state_change(self, state:comm.RobotState):
+        self._robot_talking = state.talking
+
+
+
 class PepperSim:
     def __init__(self):
         self.audio_player = pcm_utils.AsyncAudioPlayer(16000)
@@ -222,22 +276,17 @@ class PepperSim:
     def push_pcm16_frames(self, sample_rate:int, channel_cnt:int, frames:np.ndarray):
         self.audio_player.push_pcm16_frames(sample_rate, channel_cnt, frames)
 
+        
 
-class PepperSpeak:
-    def __init__(self):
-        self.text_sender = comm.TranscriptSender()
-        self.pending_sentences = []
-        self.wip_sentence = ""
-    def push_text(self, text):
-        self.wip_sentence += text
-
-    def on_robot_state_change(self, state:comm.RobotState):
-        pass
 def main():
-    pepper = PepperSim()
-    text_sender = comm.TranscriptSender()
+    # pepper_sim: PepperSim = None
+    # pepper_sim = PepperSim()
+    subtitle_server = subtitles.SubtitleServer()
+    pepper_speak = PepperSpeak(subtitle_server=subtitle_server)
+
     def on_robot_state_change(state:comm.RobotState):
         print(state)
+        pepper_speak.on_robot_state_change(state)
         if state.head_touched:
             oai.cancel_current()
     robot_state_listener = comm.RobotStateListener(on_robot_state_change)
@@ -245,29 +294,27 @@ def main():
     def on_query_update(query:Query):
         if query.done:
             print(query)
-    subtitle_server = subtitles.SubtitleServer()
-
-    def on_subtitle_update(text):
-        subtitle_server.set_text(text)
-        text_sender.send(text)
-    subtitle_manager = subtitles.AudioSynchronizedSubtitleProvider()
+    # assp = subtitles.AudioSynchronizedSubtitleProvider()
+    # intermediate_response_text_callback = assp.push_text
+    
+    intermediate_response_text_callback = pepper_speak.push_text
 
     def on_response_audio(sample_rate:int, channel_cnt:int, frames:np.ndarray):
-        pepper.push_pcm16_frames(sample_rate, channel_cnt, frames)
-        subtitle_manager.push_pcm16_frames(sample_rate, channel_cnt, frames)
+        return
+        pepper_sim.push_pcm16_frames(sample_rate, channel_cnt, frames)
+        assp.push_pcm16_frames(sample_rate, channel_cnt, frames)
 
     oai = Oai(
         system_prompt=(
             "Du är roboten Pepper."
             "Du är glad och artig."
             "Du pratar svenska. Långsamt, tydligt och kortfattat."
-            #"Använd korta meningar med ganska långa pauser mellan."
         ),
-        #voice=None,
+        voice=None,
         query_update_callback = on_query_update,
         response_audio_callback = on_response_audio,
         state_callback=print,
-        intermediate_response_text_callback=subtitle_manager.push_text
+        intermediate_response_text_callback=intermediate_response_text_callback
     )
     def muter():
         while True:

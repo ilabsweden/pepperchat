@@ -14,30 +14,37 @@ import numpy as np
 import requests
 
 HTTP_PORT = 8088
-
+htmlfile = os.path.dirname(os.path.realpath(__file__)) + "/subtitles.html"
 class SubtitleServer:
     class HttpHandler(http.server.BaseHTTPRequestHandler):
         pending_text = "*"
         def do_GET(self):
+            print("getreq:", self.request)
             self.send_response(200)
             self.send_header("Content-type", "text/html")
             self.end_headers()
-            if "favicon" in str(self.requestline):
-                resp = ""
+            # Ignore favicon with an empty 200
+            if "favicon" in self.path:
+                content = b""
             else:
-                resp = open(os.path.dirname(os.path.realpath(__file__)) + "/subtitles.html","r").read()
-            self.wfile.write(resp.encode("utf-8"))
+                with open(htmlfile, "rb") as f:
+                    content = f.read()
 
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Content-Length", str(len(content)))
+            self.end_headers()
+            self.wfile.write(content)
         
         def do_POST(self):
             #print("postreq:", self.request)
-            while not self.pending_text:
-                time.sleep(.1)
+            # while not self.pending_text:
+            #     time.sleep(.1)
             self.send_response(200)
             self.send_header("Content-type", "text/html")
             self.end_headers()
             self.wfile.write(self.pending_text.encode("utf-8"))
-            self.pending_text = ""
+            #self.pending_text = ""
 
         def log_message(self, format, *args):
             return

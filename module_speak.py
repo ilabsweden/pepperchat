@@ -33,14 +33,13 @@ dotenv.load_dotenv()
 
 OPENAI_PROMPTFILE = os.getenv('OPENAI_PROMPTFILE','dialogue.prompt')
 START_PROMPT = codecs.open(OPENAI_PROMPTFILE,encoding='utf-8').read() if os.path.isfile(OPENAI_PROMPTFILE) else ''
-participantId = raw_input('Participant ID: ')
-ALIVE = int(participantId) % 2 == 1
-
+#participantId = raw_input('Participant ID: ')
+#ALIVE = int(participantId) % 2 == 1
+ALIVE = True
 class DummyChatbot:
     def respond(self, msg):
         return codecs.encode(msg,'utf8','ignore') if isinstance(msg,str) else msg
     
-
 
 class SpeakModule(naoqi.ALModule):
    
@@ -67,6 +66,20 @@ class SpeakModule(naoqi.ALModule):
         #self.touch = ALProxy("ALTouch", self.strNaoIp, ROBOT_PORT)
         self.memory.subscribeToEvent("TouchChanged", self.getName(), "on_touch_changed")
         self.touched = False
+        tablet = ALProxy("ALTabletService", self.strNaoIp, ROBOT_PORT)
+
+        try:
+            #tablet.configureWifi("wpa", "ShcRobots", "pepperoni")
+            t = time.time()
+            print("Connecting...")
+            while tablet.getWifiStatus() != "CONNECTED" and time.time() - t < 5:
+                time.sleep(.1)
+            print(tablet.getWifiStatus())
+            print("loadurl:", tablet.loadUrl("http://192.168.2.114:8088/subtitles.html?t="+str(int(time.time()))))
+            print("showwv:", tablet.showWebview())
+
+        except Exception as e:
+            print("Error:", e)        
 
     def on_touch_changed(self, name, touches):
         touched = False
@@ -74,6 +87,7 @@ class SpeakModule(naoqi.ALModule):
             touched = touched or (len(touch) > 1 and touch[1] == True)
         if touched != self.touched:
             self.touched = touched
+            self.state_reporter.report_head_touched(touched)
             if touched:
                 self.stop_talking()
 
@@ -102,7 +116,7 @@ class SpeakModule(naoqi.ALModule):
         print(self.tts.getLanguage())
 
     def encode(self,s):
-        return codecs.encode(s,'utf8','ignore')
+        return codecs.encode(s,'utf-8','ignore')
 
     def say_string(self, text):
         self.state_reporter.report_talking(True)
@@ -192,9 +206,7 @@ def main():
         RobotPosture.goToPosture('Stand',0.5)
         print('Even participant number, autonomous life disabled.')
 
-    TabletService = ALProxy('ALTabletService')
-    TabletService.goToSleep()
-    
+   
     # Reinstantiate module
 
     # Warning: must be a global variable
