@@ -21,6 +21,10 @@ class TranscriptReceiver(udp.UdpReceiver):
         self.start()
 
 
+COMMAND_UDP_PORT = 50008
+COMMAND_UDP_IP = "224.1.1.8"
+
+
 ROBOT_STATE_UDP_PORT = 50007
 ROBOT_STATE_UDP_IP = "224.1.1.7"
 
