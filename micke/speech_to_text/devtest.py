@@ -3,12 +3,9 @@ import threading
 import time
 
 import numpy as np
-import pyaudio
 import __parentdir
 import comm
 
-from transcriber import TranscriberResult
-import keyboard
 import pepper_command
 def test_transcript_receiver():
     def onrec(msg):
@@ -39,18 +36,22 @@ def test_state_comm():
     test_state_listener()
 
 
-def test_command():
-    def receiver():
-        def rec(cmd):
-            print(cmd.__dict__)
-        receiver = pepper_command.CommandReceiver(rec)
-    
-    threading.Thread(target=receiver,daemon=True).start()
+def test_command_sender():
     sender = pepper_command.CommandSender()
-    ca = pepper_command.ConfigAudio(output_volume=1)
     while True:
         time.sleep(.5)
-        ca.output_volume += 1
-        sender.send(ca)
+        sender.send(pepper_command.ConfigSpeech("se",True))
 
-test_command()
+def test_command_receiver():
+    def rec(cmd):
+        print(cmd.__dict__)
+    receiver = pepper_command.CommandReceiver(rec)
+    while True:
+        time.sleep(.5)
+
+def test_command_both():
+    threading.Thread(target=test_command_receiver,daemon=True).start()
+    test_command_sender()
+
+pepper_command.CommandSender().send(pepper_command.Say("Hey!"))
+time.sleep(1)

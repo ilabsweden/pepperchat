@@ -1,9 +1,11 @@
 import json
+import sys
 try:
     from micke import comm, udp
 except:
     import comm, udp
 
+IS_PY2 = sys.version_info[0] == 2
 _command_types = []
 class Command(object):
     def __init__(self):
@@ -51,9 +53,13 @@ def parse_json(jsn):
     dct = json.loads(jsn)
     command_name = dct.get("command")
     del dct["command"]
-    for type in _command_types:
-        if command_name == type.__name__:
-            initstr = ",".join([key + "="+ (("\"" + val + "\"") if isinstance(val,str) else str(val)) for key,val in dct.items()])
+    def fmt_val(val):
+        if (IS_PY2 and isinstance(val,unicode)) or isinstance(val,str):
+            return "\"" + val + "\""
+        return str(val)
+    for cmd_type in _command_types:
+        if command_name == cmd_type.__name__:
+            initstr = ",".join([key + "=" + fmt_val(val) for key,val in dct.items()])
             command = eval(command_name + "(" + initstr + ")")
             return command
 

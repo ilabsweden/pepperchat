@@ -17,7 +17,6 @@ ROBOT_PORT = 9559 # Robot
 ROBOT_IP = "pepper.local" # Pepper default
 
 from optparse import OptionParser
-import queue
 import re
 import threading
 import traceback
@@ -28,7 +27,6 @@ import time
 import sys, os
 import codecs
 from naoqi import ALProxy
-
 def start_thread(target):
     t = threading.Thread(target=target)
     t.setDaemon(True)
@@ -63,27 +61,24 @@ class ModuleCommandable(naoqi.ALModule):
         self.memory.subscribeToEvent("TouchChanged", self.getName(), "on_touch_changed")
         self.touched = False
         self.running = True
-        self.say_queue = queue.Queue()
+        self.pending_speech = ""
         self.tablet_wifi_config = None # type: pepper_command.ConfigTabletWifi
         self.speech_config = None # type: pepper_command.ConfigSpeech
         def speech_loop():
             while self.running:
                 try:
-                    lang = ""
-                    cmd = self.say_queue.get() # type: pepper_command.Say
-                    if cmd.text:
-                        if cmd.language != lang:
-                            lang = cmd.language
-                            self.tts.setLanguage(lang)
-                        data = self.encode(cmd.text)
+                    if self.pending_speech:
+                        data = bytes(self.pending_speech)
+                        self.pending_speech = ""
                         self.state_reporter.report_talking(True)
-                        if self.speech_config.animated:
+                        if self.speech_config and self.speech_config.animated:
                             self.aup.say(data)
                         else:
                             self.tts.say(data)
                     self.state_reporter.report_talking(False)
                 except:
                     traceback.print_exc()
+                time.sleep(.01)
         start_thread(speech_loop)
     
     def connect_tablet_wifi(self):
@@ -110,7 +105,7 @@ class ModuleCommandable(naoqi.ALModule):
             # type: (pepper_command.Command) -> None
             if isinstance(command, pepper_command.Say):
                 self.stop_talking()
-                self.say_queue.put(command)
+                self.pending_speech=command.text
             elif isinstance(command, pepper_command.ConfigSpeech):
                 if not self.speech_config or self.speech_config.animated != command.animated:
                     if command.animated:
@@ -159,8 +154,7 @@ class ModuleCommandable(naoqi.ALModule):
         return codecs.encode(s,'utf-8','ignore')
     
     def stop_talking(self):
-        while self.say_queue.get_nowait():
-            pass
+        self.pending_speech = ""
         self.tts.stopAll()
         self.state_reporter.report_talking(False)
 

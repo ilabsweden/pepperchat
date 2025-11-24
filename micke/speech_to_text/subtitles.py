@@ -3,6 +3,7 @@ import json
 import os
 import platform
 import re
+import socket
 import threading
 import time
 import traceback
@@ -13,7 +14,6 @@ from typing import Callable, List, Tuple
 import numpy as np
 import requests
 
-HTTP_PORT = 8088
 htmlfile = os.path.dirname(os.path.realpath(__file__)) + "/subtitles.html"
 class SubtitleServer:
     class HttpHandler(http.server.BaseHTTPRequestHandler):
@@ -55,6 +55,11 @@ class SubtitleServer:
         if(self._instance):
             return self._instance
         self._instance = self
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(('8.8.8.8', 80))
+        self.url = f"http://{s.getsockname()[0]}:{http_port}"
+        s.close()
+
         def listen():
             with socketserver.TCPServer(("", http_port), self.HttpHandler) as httpd:
                 print(f"Serving on port {http_port}...")
