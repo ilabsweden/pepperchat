@@ -8,7 +8,7 @@
 #
 #    --pip <ip>: specify the ip of your robot (without specification it will use the ROBOT_IP defined below
 #
-# Author: Erik Billing, University of Skovde based on code from Johannes Bramauer, Vienna University of Technology
+# Author: Mikael Lebram & Erik Billing, University of Skovde based on code from Johannes Bramauer, Vienna University of Technology
 # Created: May 30, 2018 and updated spring progressively during in the period 2022-05 to 2024-04. 
 # License: MIT
 ###########################################################
@@ -17,7 +17,6 @@ ROBOT_PORT = 9559 # Robot
 ROBOT_IP = "pepper.local" # Pepper default
 
 from optparse import OptionParser
-import re
 import threading
 import traceback
 from micke.comm import RobotStateReporter
@@ -27,33 +26,25 @@ import time
 import sys, os
 import codecs
 from naoqi import ALProxy
+
 def start_thread(target):
     t = threading.Thread(target=target)
     t.setDaemon(True)
     t.start()
     return t
 
+def encode(s):
+    return codecs.encode(s,'utf-8','ignore')
+
 class ModuleCommandable(naoqi.ALModule):
-    def __init__( self, strModuleName, strNaoIp ):
-        try:
-            naoqi.ALModule.__init__(self, strModuleName )
-            self.BIND_PYTHON( self.getName(),"callback" )
-            self.strNaoIp = strNaoIp
-        except(BaseException, err):
-            print( "ERR: " + self.__class__.__name__  + ": loading error:" + str(err))
-
-
-    def __del__(self):
-        print( "INF:" + self.__class__.__name__ + ".__del__: cleaning everything" )
-        self.stop()
-
-    def start(self):
-        self.memory = ALProxy("ALMemory", self.strNaoIp, ROBOT_PORT)
-        self.posture = ALProxy("ALRobotPosture", self.strNaoIp, ROBOT_PORT)
+    def __init__(self, robot_ip, robot_port ):
+        naoqi.ALModule.__init__(self, self.__class__.__name__ )
+        self.memory = ALProxy("ALMemory", robot_ip, robot_port)
+        self.posture = ALProxy("ALRobotPosture", robot_ip, robot_port)
         self.autonomous_life = ALProxy('ALAutonomousLife')
-        self.tts = ALProxy("ALTextToSpeech",  self.strNaoIp, ROBOT_PORT)
-        self.aup = ALProxy("ALAnimatedSpeech",  self.strNaoIp, ROBOT_PORT)
-        self.tablet = ALProxy("ALTabletService", self.strNaoIp, ROBOT_PORT)
+        self.tts = ALProxy("ALTextToSpeech",  robot_ip, robot_port)
+        self.aup = ALProxy("ALAnimatedSpeech",  robot_ip, robot_port)
+        self.tablet = ALProxy("ALTabletService", robot_ip, robot_port)
         self.audio = ALProxy("ALAudioDevice")
 
         self.state_reporter = RobotStateReporter()
@@ -68,7 +59,7 @@ class ModuleCommandable(naoqi.ALModule):
             while self.running:
                 try:
                     if self.pending_speech:
-                        data = self.encode(self.pending_speech)
+                        data = encode(self.pending_speech)
                         self.pending_speech = ""
                         self.state_reporter.report_talking(True)
                         if self.speech_config and self.speech_config.animated:
@@ -140,31 +131,21 @@ class ModuleCommandable(naoqi.ALModule):
             self.stop_talking()
 
    
+    def __del__(self):
+        self.stop()
+
     def stop(self):
-        print( "INF: " + self.__class__.__name__ + ": stopping..." )
         self.memory.unsubscribe(self.getName())
         self.running = False
         self.stop_talking()
-        print( "INF: " + self.__class__.__name__ + ": stopped!" )
 
     def version(self):
         return "1.0"
-
-    def encode(self,s):
-        return codecs.encode(s,'utf-8','ignore')
     
     def stop_talking(self):
         self.pending_speech = ""
         self.tts.stopAll()
         self.state_reporter.report_talking(False)
-
-    def react(self,s):
-        if re.match(".*I.*sit down.*",s): # Sitting down
-            self.posture.goToPosture("Sit",1.0)
-        elif re.match(".*I.*stand up.*",s): # Standing up
-            self.posture.goToPosture("Stand",1.0)
-        elif re.match(".*I.*(lie|lyi).*down.*",s): # Lying down
-            self.posture.goToPosture("LyingBack",1.0)
 
 def main():
     """ Main entry point
@@ -195,38 +176,15 @@ def main():
        pip,         # parent broker IP
        pport)       # parent broker port
 
-
-    MODULE_NAME = "moduleCommandable"
-    try:
-        p = ALProxy(MODULE_NAME)
-        p.exit()  # kill previous instance
-    except:
-        pass
-
-
-    Dialog = ALProxy('ALDialog')
-    Dialog.stopDialog()
-    Dialog.deactivateTopic('all')
-
-    # Reinstantiate module
-
-    # Warning: must be a global variable
-    # The name given to the constructor must be the name of the
-    # variable
-    global moduleCommandable
-    moduleCommandable = ModuleCommandable(MODULE_NAME, pip)
-    moduleCommandable.start()
+    ModuleCommandable(pip, pport)
 
     try:
         while True:
             time.sleep(1)
 
     except KeyboardInterrupt:
-        print
-        print("Interrupted by user, shutting down")
-        myBroker.shutdown()
-        sys.exit(0)
-
+        pass
+    myBroker.shutdown()
 
 if __name__ == "__main__":
     main()

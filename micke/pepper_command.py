@@ -5,6 +5,7 @@ import sys
 from threading import Thread
 import threading
 import time
+import traceback
 try:
     from micke import comm, udp
 except:
@@ -78,21 +79,21 @@ class CommandReceiver:
         sock.bind("tcp://*:"+str(ZMQ_PORT))
         def loop():
             while self.ctx:
-                response = {}
-                print('Listening for msg...')
-                request = sock.recv_json()
-                print('request:',request)
-                command_name = request.get("command", None)
-                if command_name in _all_command_names:
-                    parms = request.copy()
-                    del parms["command"]
-                    command = eval(command_name + "(**parms)")
-                    callback(command)
-        
-                response['time'] = datetime.now().isoformat()
-                print('Sending response:',response)        
-                sock.send_json(response)
+                try:
+                    response = {}
+                    request = sock.recv_json()
+                    print('request:',request)
+                    command_name = request.get("command", None)
+                    if command_name in _all_command_names:
+                        parms = request.copy()
+                        del parms["command"]
+                        command = eval(command_name + "(**parms)")
+                        callback(command)
             
+                    response['time'] = datetime.now().isoformat()
+                    sock.send_json(response)
+                except:
+                    traceback.print_exc()            
 
         t = Thread(target=loop)
         t.daemon = True

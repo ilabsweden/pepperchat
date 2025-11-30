@@ -21,10 +21,6 @@ class TranscriptReceiver(udp.UdpReceiver):
         self.start()
 
 
-COMMAND_UDP_PORT = 50008
-COMMAND_UDP_IP = "224.1.1.8"
-
-
 ROBOT_STATE_UDP_PORT = 50007
 ROBOT_STATE_UDP_IP = "224.1.1.7"
 
@@ -32,6 +28,7 @@ class RobotState:
     def __init__(self):
         self.talking = False
         self.head_touched = False
+        self.just_started = False
     def __str__(self):
         return str(self.__dict__)
     
@@ -39,9 +36,14 @@ class RobotStateReporter(udp.UdpSender):
     def __init__(self):
         super(RobotStateReporter, self).__init__(ROBOT_STATE_UDP_PORT, ROBOT_STATE_UDP_IP)
         self.state = RobotState()
+        self.state.just_started = True
+        self.report_cur_state()
+    
     def report_cur_state(self):
         # type: (RobotState) -> None
         self.send_data(json.dumps(self.state.__dict__).encode("utf-8"))
+        self.state.just_started = False
+
     def report_talking(self, t):
         # type: (bool) -> None
         if self.state.talking != t:

@@ -24,6 +24,9 @@
         #main.noConnection{
             background-color: black;
         }
+        #main.hideText{
+            color: rgba(0,0,0,0);
+        }
         .sentence{
             margin-bottom: 5vh;
         }
@@ -60,10 +63,12 @@
                 xmlhttp.send(dataStr);
 
             }
+            var lastTextTime = 0;
             function showSubtitles(text){
                 if (text == prevText){
                     return;
                 }
+                lastTextTime = Date.now();
                 prevText = text;
                 main.innerHTML = "";
                 function addChunk(chunk){
@@ -98,12 +103,17 @@
             }
             var main;
             var prevText = "";
-           setTimeout(function(){
+            setTimeout(function(){
                 main = document.getElementById("main");
                 main.innerHTML="Hej 6";
                 main.scrollTop = 999999;            
                 main.scrollTop = main.scrollHeight;             
                 poll();
+                setInterval(function(){
+                    if (main){
+                        main.classList.toggle("hideText", Date.now() - lastTextTime > 10000)
+                    }
+                }, 100);
 
             },1000);
 

@@ -15,15 +15,22 @@ import comm
 
 def main():
     command_sender = pepper_command.CommandSender()
-    command_sender.send(pepper_command.ConfigSpeech(language="Swedish", animated=True))
-    command_sender.send(pepper_command.ConfigAudio(output_volume=70))
+    
+    def init_robot():
+        command_sender.send(pepper_command.ConfigSpeech(language="Swedish", animated=True))
+        command_sender.send(pepper_command.ConfigAudio(output_volume=70))
+    
+    init_robot()
     pts = PepperTextSpeaker(
         command_sender=command_sender,
         subtitle_server=subtitles.SubtitleServer()
     )
+
     pts.push_text("Det enda ja äter, är sill o puttäter. Sillsillsill och puttputtputtäter.")
     def on_robot_state_change(state:comm.RobotState):
         print(state)
+        if state.just_started:
+            init_robot()
         pts.on_robot_state_change(state)
         if state.head_touched:
             oai.cancel_current()
