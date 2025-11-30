@@ -68,7 +68,7 @@ class ModuleCommandable(naoqi.ALModule):
             while self.running:
                 try:
                     if self.pending_speech:
-                        data = bytes(self.pending_speech)
+                        data = self.encode(self.pending_speech)
                         self.pending_speech = ""
                         self.state_reporter.report_talking(True)
                         if self.speech_config and self.speech_config.animated:

@@ -21,7 +21,7 @@ def main():
         command_sender=command_sender,
         subtitle_server=subtitles.SubtitleServer()
     )
-    pts.push_text("Det enda ja äter, är sill o puttäter. Putt putt putt puttäter. Och som sagt: sill?")
+    pts.push_text("Det enda ja äter, är sill o puttäter. Sillsillsill och puttputtputtäter.")
     def on_robot_state_change(state:comm.RobotState):
         print(state)
         pts.on_robot_state_change(state)
@@ -34,13 +34,15 @@ def main():
             print(query)
     
     intermediate_response_text_callback = pts.push_text
-
     oai = OaiChatIntegrated(
+
         system_prompt=(
-            "Du är roboten Pepper."
-            "Du är glad och artig."
-            "Du pratar svenska. Långsamt, tydligt och kortfattat."
+            "Du agerar som den sociala roboten Pepper. "
+            "Du svarar kortfattat med en eller två meningar. "
+            "Vi befinner oss i Skaraborgs Hälsoteknikcentrum. "
+            "Idag har vi besökare som har kommit för att träffa dig. "
         ),
+        
         query_update_callback = on_query_update,
         state_callback=print,
         intermediate_response_text_callback=intermediate_response_text_callback

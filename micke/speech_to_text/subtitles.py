@@ -19,7 +19,7 @@ class SubtitleServer:
     class HttpHandler(http.server.BaseHTTPRequestHandler):
         pending_text = "*"
         def do_GET(self):
-            print("getreq:", self.request)
+            #print("getreq:", self.request)
             self.send_response(200)
             self.send_header("Content-type", "text/html")
             self.end_headers()

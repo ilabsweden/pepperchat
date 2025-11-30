@@ -1,12 +1,15 @@
+
+# -*- coding: utf-8 -*-
 import json
 import sys
+from threading import Thread
+import threading
+import time
 try:
     from micke import comm, udp
 except:
     import comm, udp
 
-IS_PY2 = sys.version_info[0] == 2
-_command_types = []
 class Command(object):
     def __init__(self):
         self.command = self.__class__.__name__
@@ -18,14 +21,12 @@ class ConfigTabletWifi(Command):
         self.ssid = ssid
         self.pwd = pwd
         self.security_type = security_type
-_command_types.append(ConfigTabletWifi)
 
 class OpenUrlOnTablet(Command):
     def __init__(self, url):
         # type: (str) -> OpenUrlOnTablet
         super(OpenUrlOnTablet, self).__init__()
         self.url = url
-_command_types.append(OpenUrlOnTablet)
         
 class ConfigSpeech(Command):
     def __init__(self, language, animated):
@@ -33,51 +34,90 @@ class ConfigSpeech(Command):
         super(ConfigSpeech, self).__init__()
         self.language = language
         self.animated = animated
-_command_types.append(ConfigSpeech)
 
 class Say(Command):
     def __init__(self, text):
         # type: (str) -> Say
         super(Say, self).__init__()
         self.text = text
-_command_types.append(Say)
 
 class ConfigAudio(Command):
     def __init__(self, output_volume):
         # type: (int) -> ConfigAudio
         super(ConfigAudio, self).__init__()
         self.output_volume = output_volume
-_command_types.append(ConfigAudio)
+
+import ast
+import inspect
+import zmq
+from datetime import datetime
+ZMQ_PORT = 51001
+
+_all_command_names = []
+with open(inspect.getsourcefile(lambda: None) or __file__, "r") as f:
+    tree = ast.parse(f.read())
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ClassDef):
+            if any([isinstance(base, ast.Name) and base.id == Command.__name__ for base in node.bases]):
+                _all_command_names.append(node.name)
 
 def parse_json(jsn):
-    dct = json.loads(jsn)
+    dct = jsn if isinstance(jsn,dict) else json.loads(jsn)
     command_name = dct.get("command")
-    del dct["command"]
-    def fmt_val(val):
-        if (IS_PY2 and isinstance(val,unicode)) or isinstance(val,str):
-            return "\"" + val + "\""
-        return str(val)
-    for cmd_type in _command_types:
-        if command_name == cmd_type.__name__:
-            initstr = ",".join([key + "=" + fmt_val(val) for key,val in dct.items()])
-            command = eval(command_name + "(" + initstr + ")")
-            return command
+    if command_name in _all_command_names:
+        del dct["command"]
+        command = eval(command_name + "(**dct)")
+        return command
 
-class CommandSender(udp.UdpSender):
-    def __init__(self):
-        super(CommandSender, self).__init__(comm.COMMAND_UDP_PORT, comm.COMMAND_UDP_IP)
-    def send(self, command):
-        # type: (Command) -> None
-        self.send_data(json.dumps(command.__dict__).encode("utf-8"))
 
-class CommandReceiver(udp.UdpReceiver):
+class CommandReceiver:
     def __init__(self, callback):
         # type: (callable[[Command], None]) -> CommandReceiver
-        def cbck(data):
-            command = parse_json(data.decode("utf-8"))
-            if command:
-                callback(command)
+        self.ctx = zmq.Context()
+        sock = self.ctx.socket(zmq.REP)
+        sock.bind("tcp://*:"+str(ZMQ_PORT))
+        def loop():
+            while self.ctx:
+                response = {}
+                print('Listening for msg...')
+                request = sock.recv_json()
+                print('request:',request)
+                command_name = request.get("command", None)
+                if command_name in _all_command_names:
+                    parms = request.copy()
+                    del parms["command"]
+                    command = eval(command_name + "(**parms)")
+                    callback(command)
+        
+                response['time'] = datetime.now().isoformat()
+                print('Sending response:',response)        
+                sock.send_json(response)
+            
 
-        super(CommandReceiver, self).__init__(cbck, comm.COMMAND_UDP_PORT, comm.COMMAND_UDP_IP)
-        self.start()
+        t = Thread(target=loop)
+        t.daemon = True
+        t.start()
+                
+    def stop(self):
+        self.ctx.destroy()
+        self.ctx = None
+ 
+class CommandSender:
+    def __init__(self):
+        self.ctx = zmq.Context()
+        self.socket = None
+
+    def send(self, command):
+        # type: (Command) -> None
+        if not self.socket:
+            self.socket = self.ctx.socket(zmq.REQ)
+            self.socket.connect("tcp://localhost:"+str(ZMQ_PORT))
+        self.socket.send_json(command.__dict__)
+        while True:
+            try:
+                response = self.socket.recv_json(flags=zmq.NOBLOCK)
+                print(response)
+                return response
+            except zmq.Again:
+                time.sleep(.1)
 
