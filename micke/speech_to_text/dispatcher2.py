@@ -27,7 +27,12 @@ def main():
     )
 
     #pts.push_text("Det enda ja äter, är sill o puttäter. Sillsillsill och puttputtputtäter.")
-    pts.push_text("Hej, jag heter Pepper och jag är en social robot. Vad roligt att se er här Skaraborgs Hälsoteknikcentrum. ")
+    pts.push_text(
+        "Välkommen hit till Skaraborgs Hälsoteknikcentrum! "
+        "Mitt namn är Pepper, och jag är en social robot. "
+        "Det ska bli jättekul att träffa er här idag "
+        "och jag hoppas vi ska få en trevlig stund tillsammans."
+    )
     def on_robot_state_change(state:comm.RobotState):
         print(state)
         if state.just_started:
@@ -55,7 +60,7 @@ def main():
         state_callback=print,
         intermediate_response_text_callback=intermediate_response_text_callback
     )
-    oai.silero.threshold = .8
+    oai.silero.threshold = .5
     def muter():
         unmute_time = 0
         while True:
