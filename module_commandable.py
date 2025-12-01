@@ -38,7 +38,7 @@ def encode(s):
 
 class ModuleCommandable(naoqi.ALModule):
     def __init__(self, robot_ip, robot_port ):
-        naoqi.ALModule.__init__(self, self.__class__.__name__ )
+        naoqi.ALModule.__init__(self, mod_name )
         self.memory = ALProxy("ALMemory", robot_ip, robot_port)
         self.posture = ALProxy("ALRobotPosture", robot_ip, robot_port)
         self.autonomous_life = ALProxy('ALAutonomousLife')
@@ -176,7 +176,10 @@ def main():
        pip,         # parent broker IP
        pport)       # parent broker port
 
-    ModuleCommandable(pip, pport)
+    global mod_name
+    mod_name = "modcomm"
+    global modcomm
+    modcomm = ModuleCommandable(pip, pport)
 
     try:
         while True:

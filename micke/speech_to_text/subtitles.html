@@ -111,7 +111,7 @@
                 poll();
                 setInterval(function(){
                     if (main){
-                        main.classList.toggle("hideText", Date.now() - lastTextTime > 10000)
+                        main.classList.toggle("hideText", Date.now() - lastTextTime > 30000)
                     }
                 }, 100);
 

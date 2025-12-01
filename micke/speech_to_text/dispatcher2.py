@@ -26,7 +26,8 @@ def main():
         subtitle_server=subtitles.SubtitleServer()
     )
 
-    pts.push_text("Det enda ja äter, är sill o puttäter. Sillsillsill och puttputtputtäter.")
+    #pts.push_text("Det enda ja äter, är sill o puttäter. Sillsillsill och puttputtputtäter.")
+    pts.push_text("Hej, jag heter Pepper och jag är en social robot. Vad roligt att se er här Skaraborgs Hälsoteknikcentrum. ")
     def on_robot_state_change(state:comm.RobotState):
         print(state)
         if state.just_started:
