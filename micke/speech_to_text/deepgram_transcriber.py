@@ -18,7 +18,8 @@ dotenv.load_dotenv()
 
 @dataclass
 class DeepgramConfig:
-    language:str = "sv-SE"
+    #language:str = "sv-SE"
+    language:str = "en-us"
     model:str = "nova-3"
     encoding:str = "linear16"
     sample_rate:int = 16000 # Nova 3 is trained on 16kHz mono, so let's stick to that

@@ -17,8 +17,8 @@ def main():
     command_sender = pepper_command.CommandSender()
     
     def init_robot():
-        command_sender.send(pepper_command.ConfigSpeech(language="Swedish", animated=True))
-        command_sender.send(pepper_command.ConfigAudio(output_volume=70))
+        command_sender.send(pepper_command.ConfigSpeech(language="English", animated=True))
+        command_sender.send(pepper_command.ConfigAudio(output_volume=100))
     
     init_robot()
     pts = PepperTextSpeaker(
@@ -28,10 +28,7 @@ def main():
 
     #pts.push_text("Det enda ja äter, är sill o puttäter. Sillsillsill och puttputtputtäter.")
     pts.push_text(
-        "Välkommen hit till Skaraborgs Hälsoteknikcentrum! "
-        "Mitt namn är Pepper, och jag är en social robot. "
-        "Det ska bli jättekul att träffa er här idag "
-        "och jag hoppas vi ska få en trevlig stund tillsammans."
+        "So let's play 20 questions. Think about a word and I wll try to figure out whch one."
     )
     def on_robot_state_change(state:comm.RobotState):
         print(state)
@@ -50,10 +47,11 @@ def main():
     oai = OaiChatIntegrated(
 
         system_prompt=(
-            "Du agerar som den sociala roboten Pepper. "
-            "Du svarar kortfattat med en eller två meningar. "
-            "Vi befinner oss i Skaraborgs Hälsoteknikcentrum. "
-            "Idag har vi besökare som har kommit för att träffa dig. "
+            "Act like the social robot Pepper. "
+            "You anser shortly with one or two sentencs. "
+            "I would like you to play 20 yestions with me.  "
+            "Start by asking me to think about a word and then follow up with questionsa so that you can guess whch word it is."
+
         ),
         
         query_update_callback = on_query_update,

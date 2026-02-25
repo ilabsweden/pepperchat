@@ -102,6 +102,7 @@ class ModuleCommandable(naoqi.ALModule):
                     if command.animated:
                         self.autonomous_life.setState('solitary')
                         self.autonomous_life.stopAll()
+                        self.autonomous_life.switchFocus('julia-8b4016/behavior_1')
                     else:
                         if self.autonomous_life.getState() != 'disabled':
                             self.autonomous_life.setState('disabled')
