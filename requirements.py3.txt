@@ -2,3 +2,4 @@
 python-dotenv
 zmq
 openai
+websocket-client

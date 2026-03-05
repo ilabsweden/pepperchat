@@ -30,34 +30,55 @@ def playback_pcm16_frame_chunks(sample_rate:int, channel_cnt:int, pcm16_chunks:L
 
 def listen_on_local_mic(sample_rate, callbacks:List[Callable[[int, int, np.ndarray], None]], blocksize = 1024, channel_cnt = 1):
     p = pyaudio.PyAudio()
-    dev_idx = None
-    for i in range(p.get_device_count()):
-        info = p.get_device_info_by_index(i)
-        if info["maxInputChannels"] >= channel_cnt:
-            print(info)
-            dev_idx=i
-            break
-    instream = p.open(
-        input_device_index=dev_idx,
-        rate= sample_rate,
-        channels=channel_cnt,
-        input=True,
-        format=pyaudio.paInt16,
-        frames_per_buffer=blocksize
-    )
-    while True:
+    instream = None
+    try:
+        dev_idx = None
+        for i in range(p.get_device_count()):
+            info = p.get_device_info_by_index(i)
+            if info["maxInputChannels"] >= channel_cnt:
+                print(info)
+                dev_idx = i
+                break
+
+        instream = p.open(
+            input_device_index=dev_idx,
+            rate=sample_rate,
+            channels=channel_cnt,
+            input=True,
+            format=pyaudio.paInt16,
+            frames_per_buffer=blocksize
+        )
+
+        while True:
+            try:
+                data = instream.read(blocksize, exception_on_overflow=False)
+                frames = np.frombuffer(data, dtype=np.int16).copy()
+                for callback in callbacks:
+                    callback(sample_rate, channel_cnt, frames)
+            except KeyboardInterrupt:
+                return
+            except OSError as exc:
+                err_no = getattr(exc, "errno", None)
+                message = str(exc).lower()
+                if err_no == -9988 or "stream closed" in message:
+                    print(f"Microphone stream closed ({exc}). Stopping local mic listener.")
+                    return
+                print(f"Microphone stream error: {exc}")
+                return
+            except Exception:
+                try:
+                    print(traceback.format_exc())
+                except Exception:
+                    print("Unexpected microphone error (failed to format traceback).")
+                return
+    finally:
         try:
-            data = instream.read(blocksize)
-            frames = np.frombuffer(data, dtype=np.int16).copy()
-            for callback in callbacks:
-                callback(sample_rate, channel_cnt, frames)
-        except KeyboardInterrupt:
-            instream.stop_stream()
-            instream.close()
-            p.terminate()
-            return
-        except:
-            traceback.print_exc()
+            if instream is not None:
+                instream.stop_stream()
+                instream.close()
+        except Exception:
+            pass
+        p.terminate()
 
 
 def listen_on_streamed_audio(callbacks:List[Callable[[int, int, np.ndarray], None]]):
