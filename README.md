@@ -75,10 +75,9 @@ Make sure you've gone through all steps in the Setup guide above before you star
 
 Note that the Speech recognition module uses a NaoQi (*Autonomous Life Proxy*) to switch focus to *nao_focus*. You may not have this script on your own robot and the the code will throw an exception as a result. This call is made solely to prevent the default dialogue system of the robot to interfere with PepperChat. You may safely comment this away or upload your own preferred focus script to the robot, e.g. using Choreograph. 
 
-* Start the OpenAI ChatGPT chatbot service by opening a terminal and execute ```python3 startDialogueServer.py```. If everything goes well, the server should respond with _Starting OpenAI chat server...
-Type an input message to test your chatbot..._
-* Next, start Google's text to speech recognition service for Pepper by opening a new terminal and execute ```python module_speechrecognition.py --pip pepper.local``` (where _pepper.local_ refers to your robot's ip).
-* We are now ready to start the dialogue service by opening another terminal and executing ```python module_dialogue.py --pip pepper.local```. This script will ask for a participant id and then connect to the OpenAI chatbot server we started earlier. If everything goes well it will continue and register another NaoQi module that runs the dialogue. _Pepper should now be ready to chat!_
+* Start the Pepper python2 interface by opening a new terminal and execute ```python2 module_commandable.py --pip pepper.local``` (where _pepper.local_ refers to your robot's ip).
+* Next, start the OpenAI ChatGPT chatbot service by opening a terminal and execute ```python3 startDialogue.py```. This will initiate the dialogue on the robot.
+
 
 ## License
 
