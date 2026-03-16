@@ -71,14 +71,12 @@ Now we need the Python NaoQi API for communicating with the Pepper robot.
 I haven't been able to make Choreographe to run on recent versions of OSX, but it's not needed for running this app. 
 
 ## Run
-Make sure you've gone through all steps in the Setup guide above before you start. 
+Start the robot and let boot complete. 
 
-Note that the Speech recognition module uses a NaoQi (*Autonomous Life Proxy*) to switch focus to *nao_focus*. You may not have this script on your own robot and the the code will throw an exception as a result. This call is made solely to prevent the default dialogue system of the robot to interfere with PepperChat. You may safely comment this away or upload your own preferred focus script to the robot, e.g. using Choreograph. 
+* Start the communication module for Pepper by opening a new terminal and execute ```python2 module_commandable.py```
+* We are now ready to start the dialogue service by opening another terminal and executing ```python3 .\micke\speech_to_text\dispatcher.py```. This script will start the dialogue. 
 
-* Start the OpenAI ChatGPT chatbot service by opening a terminal and execute ```python3 startDialogueServer.py```. If everything goes well, the server should respond with _Starting OpenAI chat server...
-Type an input message to test your chatbot..._
-* Next, start Google's text to speech recognition service for Pepper by opening a new terminal and execute ```python module_speechrecognition.py --pip pepper.local``` (where _pepper.local_ refers to your robot's ip).
-* We are now ready to start the dialogue service by opening another terminal and executing ```python module_dialogue.py --pip pepper.local```. This script will ask for a participant id and then connect to the OpenAI chatbot server we started earlier. If everything goes well it will continue and register another NaoQi module that runs the dialogue. _Pepper should now be ready to chat!_
+You can change the ChatGPT prompt by movifying the dispatcher2.py file. On line 30 you can add an opening phrase, what the robot should say when dialogue is started. On line 50, you set the instructions to ChatGPT. 
 
 ## License
 
