@@ -28,7 +28,7 @@ def main():
 
     #pts.push_text("Det enda ja äter, är sill o puttäter. Sillsillsill och puttputtputtäter.")
     pts.push_text(
-        "So let's play 20 questions. Think about a word and I wll try to figure out whch one."
+        "So let's play 20 questions. Think about a word and I will try to figure out which one."
     )
     def on_robot_state_change(state:comm.RobotState):
         print(state)
@@ -49,8 +49,8 @@ def main():
         system_prompt=(
             "Act like the social robot Pepper. "
             "You anser shortly with one or two sentencs. "
-            "I would like you to play 20 yestions with me.  "
-            "Start by asking me to think about a word and then follow up with questionsa so that you can guess whch word it is."
+            "I would like you to play 20 questions with me.  "
+            "Start by asking me to think about a word and then follow up with questions so that you can guess which word it is."
 
         ),
         
