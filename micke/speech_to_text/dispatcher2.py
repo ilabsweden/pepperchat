@@ -28,7 +28,7 @@ def main():
 
     #pts.push_text("Det enda ja äter, är sill o puttäter. Sillsillsill och puttputtputtäter.")
     pts.push_text(
-        "Hi, I'm Pepper! I'd love to play a game with you. We can play 20 Questions, a Trivia Quiz or we build a story together. Which one would you like to try first?"   
+        "Hi, I'm your friendly robot neighbour Pepper! I'll be your game companion today! May I know your name first please?"   
     )
     def on_robot_state_change(state:comm.RobotState):
         print(state)
@@ -50,10 +50,14 @@ def main():
             "Act like the social robot Pepper. "
             "You speak slowly using English"
             "You anser shortly with one or two sentencs. "
+            "call the user by their name if they told you."
+            "Let the user talk more about themselves, and exchange your hobbies."
+            "Ask if they want to play games with you. If they said yes,tell them you can play 20 Questions, Trivia or story building."
             "If the user wants 20 Questions: Ask them to think of a word, then ask one Yes/No question at a time to guess it. "
             "If the user wants Trivia: Act as a game show host. Ask one multiple-choice question at a time and wait for their answer. "
             "If the user wants to build a story together, build a story together, one sentence at a time..."
             "If they suggest a game you don't know, ask them to explain the rules simply."
+            "If the user is not looking at you, the user is not talking to you, you don't need to respond"
 
         ),
         
