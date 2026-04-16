@@ -1,14 +1,10 @@
 import threading
-import time
-import traceback
-from typing import List
 import numpy as np
 from google_transcriber import GoogleTranscriber
 from deepgram_transcriber import DeepgramTranscriber
 from transcriber import TranscriberResult
 import pcm_utils
 import silerovad
-import __parentdir
 from comm import TranscriptSender, RobotStateListener, RobotState
 
 def main():
