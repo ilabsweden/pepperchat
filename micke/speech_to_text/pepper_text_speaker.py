@@ -50,6 +50,7 @@ class PepperTextSpeaker:
     def __init__(self, command_sender:pepper_command.CommandSender, subtitle_server:subtitles.SubtitleServer=None):
         self.command_sender = command_sender
         if subtitle_server:
+            print("Opening subtitle URL on tablet:", subtitle_server.url)
             command_sender.send(pepper_command.OpenUrlOnTablet(subtitle_server.url))
         self.subtitle_server = subtitle_server
         self.worker = PepperTextSpeaker.Worker(self)

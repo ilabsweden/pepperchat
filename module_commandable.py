@@ -83,9 +83,9 @@ class ModuleCommandable(naoqi.ALModule):
             return True
         if self.tablet_wifi_config:
             self.tablet.configureWifi(
-                self.tablet_wifi_config.security_type, 
-                self.tablet_wifi_config.ssid, 
-                self.tablet_wifi_config.pwd
+                self.tablet_wifi_config.security_type.encode("utf-8"), 
+                self.tablet_wifi_config.ssid.encode("utf-8"), 
+                self.tablet_wifi_config.pwd.encode("utf-8")
             )
             if wait_for_connection(5):
                 return True
@@ -119,7 +119,7 @@ class ModuleCommandable(naoqi.ALModule):
             elif isinstance(command, pepper_command.OpenUrlOnTablet):
                 def connect_and_open():
                     if self.connect_tablet_wifi():
-                        self.tablet.loadUrl(command.url)
+                        self.tablet.loadUrl(command.url.encode("utf-8"))
                         self.tablet.showWebview()
                 start_thread(connect_and_open)
         except:
