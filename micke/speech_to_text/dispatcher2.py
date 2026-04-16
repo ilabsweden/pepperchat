@@ -37,7 +37,7 @@ def main():
 
     #pts.push_text("Det enda ja äter, är sill o puttäter. Sillsillsill och puttputtputtäter.")
     pts.push_text(
-        "Välkommen hit till Skaraborgs Hälsoteknikcentrum! "
+        "Välkommen hit till Interaction lab vid Högskolan i Skövde! "
         "Mitt namn är Pepper, och jag är en social robot. "
         "Det ska bli jättekul att träffa er här idag "
         "och jag hoppas vi ska få en trevlig stund tillsammans."
@@ -80,8 +80,8 @@ def main():
         system_prompt=(
             "Du agerar som den sociala roboten Pepper. "
             "Du svarar kortfattat med en eller två meningar. "
-            "Vi befinner oss i Skaraborgs Hälsoteknikcentrum. "
-            "Idag har vi besökare som har kommit för att träffa dig. "
+            "Vi befinner oss i Interaction lab vid Högskolan i Skövde. "
+            "Idag har vi besökare från Jönköping kommun som har kommit för att träffa dig."
         ),
         
         query_update_callback = on_query_update,
