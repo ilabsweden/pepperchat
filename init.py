@@ -7,10 +7,10 @@ import os, sys
 DEFAULTS = {
     'LOGDIR': 'logs',
     'OPENAI_KEY': '',
-    'OPENAI_PROMPTFILE': 'openai.prompt',
-    'CHATBOT_SERVER_ADDRESS': 'tcp://localhost:5556',
-    'LANGUAGE_SPEECHRECOGNITION': 'en-us',
-    'LANGUAGE_PEPPER': 'English',
+    'LANGUAGE': 'English',
+    'TABLET_WIFI_SSID': '',
+    'TABLET_WIFI_PWD': '',
+    'TABLET_WIFI_SECURITY':'wpa'
 }
 
 if sys.version_info[0] > 2:
@@ -19,7 +19,12 @@ if sys.version_info[0] > 2:
 if os.path.isfile(env):
     print('%s already exists, exiting.'%env)
 else:
-    DEFAULTS['OPENAI_KEY'] = raw_input('Specify your OpenAI account key >')
+    for key, default in DEFAULTS.items():
+        prompt = '%s [%s] >'%(key, default) if default else '%s >'%key
+        value = raw_input(prompt).strip()
+        if not value:
+            value = default
+        DEFAULTS[key] = value
 
     with open(env,'w') as f: 
         for key, value in DEFAULTS.items():

@@ -15,7 +15,7 @@ def main():
     command_sender = pepper_command.CommandSender()
     
     def init_robot():
-        command_sender.send(pepper_command.ConfigSpeech(language="Swedish", animated=True))
+        command_sender.send(pepper_command.ConfigSpeech(language=os.getenv('LANGUAGE', 'Swedish'), animated=True))
         command_sender.send(pepper_command.ConfigAudio(output_volume=70))
         wifi_ssid = os.getenv('TABLET_WIFI_SSID')
         if wifi_ssid:
