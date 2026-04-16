@@ -1,10 +1,14 @@
 import traceback
-import __parentdir
-import pepper_command
-import subtitles
+try:
+    import pepper_command
+    import subtitles
+    import comm
+except ImportError:
+    import oai_dialogue.pepper_command as pepper_command
+    import oai_dialogue.speech_to_text.subtitles as subtitles
+    import oai_dialogue.comm as comm
 import threading
 import time
-import comm
 
 class PepperTextSpeaker:
     class Worker:

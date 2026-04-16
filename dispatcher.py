@@ -1,18 +1,15 @@
 import traceback
 import dotenv
-import __parentdir
-
-import pepper_command
-from pepper_text_speaker import PepperTextSpeaker
-import pcm_utils
-import subtitles
 dotenv.load_dotenv()
 import threading, time, json, os
 from datetime import datetime
 
-from oaichat_integrated import OaiChatIntegrated, Query
-
-import comm
+import oai_dialogue.pepper_command as pepper_command
+from oai_dialogue.speech_to_text.pepper_text_speaker import PepperTextSpeaker
+from oai_dialogue.speech_to_text import pcm_utils
+from oai_dialogue.speech_to_text import subtitles
+from oai_dialogue.speech_to_text.oaichat_integrated import OaiChatIntegrated, Query
+import oai_dialogue.comm as comm
 
 def main():
     command_sender = pepper_command.CommandSender()
@@ -51,7 +48,7 @@ def main():
             oai.cancel_current()
     robot_state_listener = comm.RobotStateListener(on_robot_state_change)
     
-    logdir = os.path.join(os.path.dirname(__file__), '..', '..', 'logs')
+    logdir = os.path.join(os.path.dirname(__file__), 'logs')
     os.makedirs(logdir, exist_ok=True)
     logfile = os.path.join(logdir, datetime.now().strftime('dialogue_%Y-%m-%d_%H%M%S.log'))
     print('Logging to', logfile)

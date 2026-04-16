@@ -11,7 +11,7 @@ dotenv.load_dotenv()
 import os, json, base64, threading, queue, time
 import numpy as np
 
-from micke.speech_to_text.oaichat_integrated import OaiChatIntegrated, Query
+from oai_dialogue.speech_to_text.oaichat_integrated import OaiChatIntegrated, Query
 
 import comm
 

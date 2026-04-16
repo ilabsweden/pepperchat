@@ -5,8 +5,12 @@ import time
 from typing import List
 import numpy as np
 import torch
-from pcm_processor import PcmProcessor
-import pcm_utils
+try:
+    from pcm_processor import PcmProcessor
+    import pcm_utils
+except ImportError:
+    from oai_dialogue.speech_to_text.pcm_processor import PcmProcessor
+    import oai_dialogue.speech_to_text.pcm_utils as pcm_utils
 
 class SileroVad:
     PRINT_DEBUG = False

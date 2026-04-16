@@ -7,7 +7,7 @@ import threading
 import time
 import traceback
 try:
-    from micke import comm, udp
+    from oai_dialogue import comm, udp
 except:
     import comm, udp
 

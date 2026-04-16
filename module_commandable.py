@@ -19,8 +19,8 @@ ROBOT_IP = "pepper.local" # Pepper default
 from optparse import OptionParser
 import threading
 import traceback
-from micke.comm import RobotStateReporter
-import micke.pepper_command as pepper_command
+from oai_dialogue.comm import RobotStateReporter
+import oai_dialogue.pepper_command as pepper_command
 import naoqi
 import time
 import sys, os

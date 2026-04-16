@@ -1,9 +1,12 @@
 import traceback
 from typing import Callable, List, Tuple
 import dotenv
-import __parentdir
-import silerovad
-from pcm_processor import PcmProcessor
+try:
+    import silerovad
+    from pcm_processor import PcmProcessor
+except ImportError:
+    import oai_dialogue.speech_to_text.silerovad as silerovad
+    from oai_dialogue.speech_to_text.pcm_processor import PcmProcessor
 dotenv.load_dotenv()
 import os, json, base64, threading, time
 import numpy as np

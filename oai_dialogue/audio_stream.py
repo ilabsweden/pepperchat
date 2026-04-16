@@ -7,7 +7,10 @@ import traceback
 
 import numpy as np
 
-from udp import UdpSender, UdpReceiver
+try:
+    from udp import UdpSender, UdpReceiver
+except ImportError:
+    from oai_dialogue.udp import UdpSender, UdpReceiver
 
 DEFAULT_MULTICAST_IP = "224.1.1.5"
 DEFAULT_UDP_PORT = 50005

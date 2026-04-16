@@ -1,13 +1,16 @@
 import queue
-import __parentdir
 import threading
 import time
 import traceback
 from typing import Callable, Iterable, List, Optional
 import numpy as np
 import pyaudio
-import audio_stream
-from pcm_processor import PcmProcessor
+try:
+    import audio_stream
+    from pcm_processor import PcmProcessor
+except ImportError:
+    import oai_dialogue.audio_stream as audio_stream
+    from oai_dialogue.speech_to_text.pcm_processor import PcmProcessor
 
 def playback_pcm16_frame_chunks(sample_rate:int, channel_cnt:int, pcm16_chunks:List[np.ndarray], wait = False):
     def playit():

@@ -1,6 +1,9 @@
 # Should be kept useable by python2
 import json
-import udp
+try:
+    from oai_dialogue import udp
+except:
+    import udp
 
 TRANSCRIPT_UDP_PORT = 50006
 TRANSCRIPT_UDP_IP = "224.1.1.6"
