@@ -107,7 +107,8 @@ class ModuleCommandable(naoqi.ALModule):
                             self.autonomous_life.setState('disabled')
                         self.posture.goToPosture('Stand',0.5)
                 if not self.speech_config or self.speech_config.language != command.language:
-                    self.tts.setLanguage(command.language)
+                    print(command.language, self.tts.getLanguage())
+                    self.tts.setLanguage(command.language.encode("utf-8"))
                 self.speech_config = command
 
             elif isinstance(command, pepper_command.ConfigAudio):
