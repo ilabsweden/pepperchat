@@ -11,6 +11,8 @@ from oai_dialogue.speech_to_text import subtitles
 from oai_dialogue.speech_to_text.oaichat_integrated import OaiChatIntegrated, Query
 import oai_dialogue.comm as comm
 
+dotenv.load_dotenv(os.getenv('DIALOGUE_ENV', 'dialogue.env'))
+
 def main():
     command_sender = pepper_command.CommandSender()
     
@@ -33,12 +35,7 @@ def main():
     )
 
     #pts.push_text("Det enda ja äter, är sill o puttäter. Sillsillsill och puttputtputtäter.")
-    pts.push_text(
-        "Välkommen hit till Interaction lab vid Högskolan i Skövde! "
-        "Mitt namn är Pepper, och jag är en social robot. "
-        "Det ska bli jättekul att träffa er här idag "
-        "och jag hoppas vi ska få en trevlig stund tillsammans."
-    )
+    pts.push_text(os.getenv('SAY', ''))
     def on_robot_state_change(state:comm.RobotState):
         print(state)
         if state.just_started:
@@ -73,14 +70,7 @@ def main():
     
     intermediate_response_text_callback = pts.push_text
     oai = OaiChatIntegrated(
-
-        system_prompt=(
-            "Du agerar som den sociala roboten Pepper. "
-            "Du svarar kortfattat med en eller två meningar. "
-            "Vi befinner oss i Interaction lab vid Högskolan i Skövde. "
-            "Idag har vi besökare från Jönköping kommun som har kommit för att träffa dig."
-        ),
-        
+        system_prompt=os.getenv('PROMPT', ''),
         query_update_callback = on_query_update,
         state_callback=print,
         intermediate_response_text_callback=intermediate_response_text_callback
