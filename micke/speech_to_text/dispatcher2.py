@@ -7,7 +7,8 @@ from pepper_text_speaker import PepperTextSpeaker
 import pcm_utils
 import subtitles
 dotenv.load_dotenv()
-import threading, time
+import threading, time, json, os
+from datetime import datetime
 
 from oaichat_integrated import OaiChatIntegrated, Query
 
@@ -42,9 +43,28 @@ def main():
             oai.cancel_current()
     robot_state_listener = comm.RobotStateListener(on_robot_state_change)
     
+    logdir = os.path.join(os.path.dirname(__file__), '..', '..', 'logs')
+    os.makedirs(logdir, exist_ok=True)
+    logfile = os.path.join(logdir, datetime.now().strftime('dialogue_%Y-%m-%d_%H%M%S.log'))
+    print('Logging to', logfile)
+
+    def log_query(query:Query):
+        entry = {
+            'time': datetime.fromtimestamp(query.start_time).isoformat(),
+            'user': query.query_text.strip(),
+            'response': query.response_text.strip(),
+            'duration': round(query.duration, 2)
+        }
+        with open(logfile, 'a', encoding='utf-8') as f:
+            json.dump(entry, f, ensure_ascii=False)
+            f.write(',\n')
+
     def on_query_update(query:Query):
+        if query.query_text and not query.response_text:
+            print("USER:", query.query_text.strip())
         if query.done:
             print(query)
+            log_query(query)
     
     intermediate_response_text_callback = pts.push_text
     oai = OaiChatIntegrated(
