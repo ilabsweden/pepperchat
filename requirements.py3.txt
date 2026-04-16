@@ -1,5 +1,8 @@
-# PepperChat Python2 Requirements
+# PepperChat Python3 Requirements
 python-dotenv
 zmq
-openai
+numpy
+pyaudio
+scipy
+torch
 websocket-client

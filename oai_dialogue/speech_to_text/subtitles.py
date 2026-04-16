@@ -12,7 +12,6 @@ import http.server
 import socketserver
 from typing import Callable, List, Tuple
 import numpy as np
-import requests
 
 htmlfile = os.path.dirname(os.path.realpath(__file__)) + "/subtitles.html"
 class SubtitleServer:

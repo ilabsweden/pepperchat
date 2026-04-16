@@ -1,13 +1,8 @@
+# Active dependencies for oai_dialogue/speech_to_text
 numpy
 pyaudio
 scipy
-deepgram-sdk
-dotenv
-google-cloud-speech
+python-dotenv
 torch
-silero-vad
-keyboard
-sounddevice
-aec-audio-processing
 websocket-client
 
