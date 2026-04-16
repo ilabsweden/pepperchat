@@ -13,3 +13,4 @@ venv*
 dialogue.log
 *.log
 .env
+.DS_Store
