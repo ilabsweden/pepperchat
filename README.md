@@ -76,7 +76,7 @@ Make sure you've gone through all steps in the Setup guide above before you star
 Note that the Speech recognition module uses a NaoQi (*Autonomous Life Proxy*) to switch focus to *nao_focus*. You may not have this script on your own robot and the the code will throw an exception as a result. This call is made solely to prevent the default dialogue system of the robot to interfere with PepperChat. You may safely comment this away or upload your own preferred focus script to the robot, e.g. using Choreograph. 
 
 * Start the Pepper python2 interface by opening a new terminal and execute ```python2 module_commandable.py --pip pepper.local``` (where _pepper.local_ refers to your robot's ip).
-* Next, start the OpenAI ChatGPT chatbot service by opening a terminal and execute ```python3 startDialogue.py```. This will initiate the dialogue on the robot.
+* Next, start the OpenAI ChatGPT chatbot service by opening a terminal and execute ```python3 dispatcher.py```. This will initiate the dialogue on the robot.
 
 
 ## License
@@ -91,6 +91,7 @@ Erik Billing, Julia Rosén, and Maurice Lamb. 2023. [Language Models for Human-R
 
 ## Acknowledgments
 
+* Mikael Lebram @ University of Skövde, Sweden - for implementing the OpenAI ChatGPT based speech recognition system. 
 * Erik Billing @ University of Skövde, Sweden - for implementing the OpenAI GPT-3 dialogue system. 
 * Igor Lirussi @ Cognitive Learning and Robotics Laboratory at Boğaziçi University, Istanbul - for providing an [AIML-based dialogue system](https://github.com/igor-lirussi/Dialogue-Pepper-Robot) on which this project is built. 
 * Johannes Bramauer @ Vienna University of Technology - for the [PepperSpeechRecognition](https://github.com/JBramauer/pepperspeechrecognition)
