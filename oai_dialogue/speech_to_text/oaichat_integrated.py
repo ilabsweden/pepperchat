@@ -12,8 +12,8 @@ import os, json, base64, threading, time
 import numpy as np
 from websocket import WebSocketApp
 
-API_KEY = os.environ.get("OPENAI_API_KEY", "")
-assert API_KEY, "Set OPENAI_API_KEY in your environment."
+API_KEY = os.environ.get("OPENAI_KEY", "")
+assert API_KEY, "Set OPENAI_KEY in your environment."
 
 class Query:
     def __init__(self):
