@@ -61,6 +61,7 @@ class SubtitleServer:
         s.close()
 
         def listen():
+            socketserver.TCPServer.allow_reuse_address = True
             with socketserver.TCPServer(("", http_port), self.HttpHandler) as httpd:
                 print(f"Serving on port {http_port}...")
                 try:
