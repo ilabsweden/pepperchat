@@ -52,18 +52,34 @@ class OaiChat:
     #moderator.start()
     self.history.append({'role':'user','content':inputText})
     #print(self.history)
-    response = self.client.chat.completions.create(
-      #model="gpt-3.5-turbo-1106",
-      model="gpt-5-mini",
-      #response_format={ "type": "json_object" },
-      #user=self.user,
-      messages=self.history,
-      # temperature=0.7,
-      max_tokens=150,
-      # top_p=1,
-      # frequency_penalty=1,
-      # presence_penalty=0
-    )
+
+    # Micke 251103: Detta funkar inte i G213. 
+    # Gnäll om att max_completion_tokens önskas istf max_tokens. Funkar inte heller...
+    # Vi fångar exception och fallbackar på äldre modell tills vidare
+    response = None
+    try:
+      response = self.client.chat.completions.create(
+        #model="gpt-3.5-turbo-1106",
+        model="gpt-4o-mini", 
+        #response_format={ "type": "json_object" },
+        #user=self.user,
+        messages=self.history,
+        # temperature=0.7,
+        max_tokens=150,
+        # top_p=1,
+        # frequency_penalty=1,
+        # presence_penalty=0
+      )
+    except Exception as ex:
+      print("Failed response attempt, trying fallback")
+    if not response:
+      response = self.client.chat.completions.create(
+        model="gpt-3.5-turbo-1106",
+        messages=self.history,
+        max_tokens=150,
+      )
+    
+
     #moderator.join()
     #print('Moderation:',self.moderation)
     #print(response.choices[0].message.content)

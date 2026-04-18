@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Pepper JS Test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body{
+            padding: 0;
+            margin: 0;
+            /* font-size 0 to hide top text line */
+            font-size: 0px;
+        }
+        #main{
+            height: 100vh;
+            width: 98vw;
+            padding: 0 1vw;
+            color: black;
+            background-color: white;
+            font-family: sans-serif;
+            font-size: 10vh;
+            overflow-y: auto;
+        }
+        #main.noConnection{
+            background-color: black;
+        }
+        #main.hideText{
+            color: rgba(0,0,0,0);
+        }
+        .sentence{
+            margin-bottom: 5vh;
+        }
+    </style>
+    <body>
+        <div id="main" onclick="location.reload()">
+            ...
+        </div>
+
+        <script type="text/javascript">
+
+            function sendData(target, data, resultCallback, errorCallback) {
+                var dataStr="";
+                keys = Object.keys(data);
+                for(var i=0;i<keys.length;i++){
+                    key = keys[i];
+                    dataStr += encodeURIComponent(key) + '=' + encodeURIComponent(data[key]) + "&";
+                }
+                var xmlhttp = new XMLHttpRequest();
+                xmlhttp.onreadystatechange = function() {
+                    if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                        if (resultCallback != null) {
+                            resultCallback(xmlhttp.responseText);
+                        }
+                    }
+                };
+                xmlhttp.onerror=function(err){
+                    if(errorCallback){
+                        errorCallback(err);
+                    }
+                };
+                xmlhttp.open("POST", target, true);
+                xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+                xmlhttp.send(dataStr);
+
+            }
+            var lastTextTime = 0;
+            function showSubtitles(text){
+                if (text == prevText){
+                    return;
+                }
+                lastTextTime = Date.now();
+                prevText = text;
+                main.innerHTML = "";
+                function addChunk(chunk){
+                    if(chunk){
+                        chunk = chunk.replace(/\n/g, "<br/>");
+                        main.innerHTML += "<div class='sentence'>" + chunk + "</div>";
+                    }
+                }
+                var chunk = "";
+                for (var i = 0; i < text.length; i++){
+                    c = text.charAt(i);
+                    chunk += c;
+                    if (".?!".indexOf(c) >= 0){
+                        addChunk(chunk);
+                        chunk = "";
+                    }
+                }
+                addChunk(chunk);
+                main.scrollTop = main.scrollHeight;
+            }
+            function poll(){
+                
+                sendData("", {"get_subtitles":1},function(response) {
+                    console.log(response);
+                    showSubtitles(response);
+                    main.classList.toggle("noConnection", false);
+                    window.setTimeout(poll, 200);
+                }, function(err){
+                    main.classList.toggle("noConnection", true);
+                    window.setTimeout(poll, 1000);
+                })
+            }
+            var main;
+            var prevText = "";
+            setTimeout(function(){
+                main = document.getElementById("main");
+                main.innerHTML="Hej 6";
+                main.scrollTop = 999999;            
+                main.scrollTop = main.scrollHeight;             
+                poll();
+                setInterval(function(){
+                    if (main){
+                        main.classList.toggle("hideText", Date.now() - lastTextTime > 30000)
+                    }
+                }, 100);
+
+            },1000);
+
+
+        </script>
+    </body>
+</html>

@@ -20,7 +20,8 @@ ROBOT_PORT = 9559
 import sys, time
 import naoqi
 from optparse import OptionParser
-from pepperspeechrecognition import SpeechRecognitionModule
+from mic_streamer import MicStreamerModule
+
 
 def main():
     """ Main entry point
@@ -51,29 +52,22 @@ def main():
        pip,         # parent broker IP
        pport)       # parent broker port
 
+    MODULE_NAME = "micStreamerModule"
     try:
-        p = ALProxy("SpeechRecognition")
+        p = ALProxy(MODULE_NAME)
         p.exit()  # kill previous instance, useful for developing ;)
     except:
         pass
 
     # Reinstantiate module
 
-    # Warning: SpeechRecognition must be a global variable
+    # Warning: micStreamerModule must be a global variable
     # The name given to the constructor must be the name of the
     # variable
-    global SpeechRecognition
-    SpeechRecognition = SpeechRecognitionModule("SpeechRecognition", pip, pport)
+    global micStreamerModule
+    micStreamerModule = MicStreamerModule(MODULE_NAME, pip, pport)
 
-    # uncomment for debug purposes
-    # usually a subscribing client will call start() from ALProxy
-    #SpeechRecognition.start()
-    #SpeechRecognition.startRecording()
-    #SpeechRecognition.calibrate()
-    #SpeechRecognition.enableAutoDetection()
-    #SpeechRecognition.startRecording()
-
-    print('Speech recognition running.')
+    print('micStreamerModule running.')
 
     try:
         while True:
