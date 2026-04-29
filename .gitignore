@@ -3,6 +3,7 @@
 
 # Virtual environment
 venv*
+.venv/*
 
 # Notebook
 .ipynb_checkpoints/*
